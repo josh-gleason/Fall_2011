@@ -6,7 +6,7 @@ Rect::Rect()
   colors = new vec4[VERTEX_COUNT];
 
   setLocation(vec2(-1.0,-1.0),vec2(1.0,1.0));
-  setColor(vec4(0.0,0.0,0.0,1.0));
+  setColor(vec4(0.0,0.0,0.0,1.0),false);
 } 
 
 Rect::Rect(const vec2& upper_left, const vec2& lower_right,
@@ -16,7 +16,7 @@ Rect::Rect(const vec2& upper_left, const vec2& lower_right,
   colors = new vec4[VERTEX_COUNT];
 
   setLocation(upper_left, lower_right);
-  setColor(color);
+  setColor(color,false);
 }
 
 Rect::Rect(const Rect& rhs)
@@ -25,7 +25,7 @@ Rect::Rect(const Rect& rhs)
   colors = new vec4[VERTEX_COUNT];
 
   setLocation(rhs.vertices[0],rhs.vertices[5]);
-  setColor(rhs.colors[0]);
+  setColor(rhs.colors[0],false);
 }
 
 Rect::~Rect()
@@ -44,13 +44,6 @@ void Rect::setLocation(const vec2& upper_left, const vec2& lower_right)
   vertices[1] = vertices[3] = upper_right;
   vertices[2] = vertices[4] = lower_left;
   vertices[5] = lower_right;
-}
-
-void Rect::setColor(const vec4& color)
-{
-  // set all vertices to same color
-  for ( int i = 0; i < VERTEX_COUNT; ++i )
-    colors[i] = color;
 }
 
 Rect& Rect::operator=(const Rect& rhs)

@@ -6,7 +6,7 @@ Circle::Circle()
   colors = new vec4[VERTEX_COUNT];
 
   setLocation(vec2(0.0,0.0),0.1);
-  setColor(vec4(0.0,0.0,0.0,1.0));
+  setColor(vec4(0.0,0.0,0.0,1.0),false);
 } 
 
 Circle::Circle(const vec2& center, GLfloat radius,
@@ -16,7 +16,7 @@ Circle::Circle(const vec2& center, GLfloat radius,
   colors = new vec4[VERTEX_COUNT];
 
   setLocation(center, radius);
-  setColor(color);
+  setColor(color,false);
 }
 
 Circle::Circle(const Circle& rhs)
@@ -53,13 +53,6 @@ void Circle::setLocation(const vec2& center, GLfloat radius)
   }
 
   vertices[CIRC_POINTS+1] = vertices[1];
-}
-
-void Circle::setColor(const vec4& color)
-{
-  // set all vertices to same color
-  for ( int i = 0; i < VERTEX_COUNT; ++i )
-    colors[i] = color;
 }
 
 Circle& Circle::operator=(const Circle& rhs)

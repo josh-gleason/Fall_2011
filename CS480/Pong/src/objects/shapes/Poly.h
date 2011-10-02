@@ -39,9 +39,11 @@ public:
 
   /** @brief Accessor to the colors array. */
   virtual const vec4* getColors() const;
+  virtual void setColor( const vec4& color, bool passToShader=true );
+  virtual void setColors( vec4* color );
 
   /** @brief Draw object to screen (should be used during display callback) */
-  virtual void draw( const mat4& projection ) const;
+  virtual void draw( const mat4& projection, const vec4& translation ) const;
 
   /** @brief Init function meant to be called during graphics initialization */
   virtual void init();
@@ -53,6 +55,7 @@ protected:
   Vec* vertices; ///< Array of vertices for the object.
   vec4* colors;  ///< Array of colors, one for each vertex.
   GLuint vao;    ///< vertex array object.
+  GLuint buffer;
   GLuint vPosition;
   GLuint vColor;
 
@@ -80,11 +83,42 @@ const vec4* Poly<Vec>::getColors() const
 }
 
 template <class Vec>
-void Poly<Vec>::draw( const mat4& projection_mat ) const
+void Poly<Vec>::setColors( vec4* colorsList )
+{
+  if ( colorsList != colors )
+  {
+    delete [] colors;
+    colors = colorsList;
+  }
+
+  int vertices_length = sizeof(Vec)*vertex_count();
+  int colors_length = sizeof(vec4)*vertex_count();
+
+  // change the colors in the buffer
+  glBindBuffer(GL_ARRAY_BUFFER, buffer);
+  glBufferSubData(GL_ARRAY_BUFFER, vertices_length, colors_length, colors);
+}
+
+template <class Vec>
+void Poly<Vec>::setColor( const vec4& colorVec, bool passToShader )
+{
+  int vCount = vertex_count();
+  
+  for ( int i = 0; i < vCount; ++i )
+    colors[i] = colorVec;
+
+  if ( passToShader )
+    setColors( colors );
+}
+
+template <class Vec>
+void Poly<Vec>::draw( const mat4& projection_mat, const vec4& translation_vec )
+  const
 {
   glBindVertexArray(vao);
 
   glUniformMatrix4fv( projection, 1, GL_TRUE, projection_mat ); 
+  glUniform4fv( translation, 1, translation_vec ); 
   glDrawArrays(get_mode(), 0, vertex_count());
   glBindVertexArray(0);
 }
@@ -105,7 +139,6 @@ void Poly<Vec>::init()
   glGenVertexArrays(1,&vao);
   glBindVertexArray(vao);
   // create a buffer object for the polygon
-  GLuint buffer;
   glGenBuffers(1,&buffer);
   glBindBuffer(GL_ARRAY_BUFFER, buffer);
   glBufferData(GL_ARRAY_BUFFER, total_length, NULL, GL_STATIC_DRAW);
@@ -129,8 +162,8 @@ void Poly<Vec>::init()
       BUFFER_OFFSET(vertices_length));
 
   projection = glGetUniformLocation(program,"projection");
+  translation = glGetUniformLocation(program,"translation");
   //model_view  = glGetUniformLocation(program,"model_view");
-  //translation = glGetUniformLocation(program,"translation");
 }
 
 template <class Vec>

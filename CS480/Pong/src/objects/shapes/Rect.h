@@ -22,7 +22,6 @@ public:
   virtual GLenum get_mode() const;
 
   void setLocation(const vec2& upper_left, const vec2& lower_right);
-  void setColor(const vec4& color);
 
   Rect& operator=(const Rect& rhs);
 private:

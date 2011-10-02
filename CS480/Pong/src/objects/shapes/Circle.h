@@ -22,7 +22,6 @@ public:
   virtual GLenum get_mode() const;
 
   void setLocation(const vec2& center, GLfloat radius);
-  void setColor(const vec4& color);
 
   Circle& operator=(const Circle& rhs);
 protected:
