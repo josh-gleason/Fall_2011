@@ -4,22 +4,24 @@
 
 using namespace std;
 
-const int TIMER_INTERVAL = 10;
-const GLfloat TOP_WALL = 1.0;
-const GLfloat BOTTOM_WALL = -1.0;
-const int RESET_TIME = 100;
-const GLfloat BALL_RADIUS = 0.04;
-const GLfloat Y_ACCEL = 0.0022;
-const GLfloat X_ACCEL = 0.0003;
+// Timer settings
+const int TIMER_INTERVAL = 10;        // Timer step size
+const int RESET_TIME = 100;           // number of frames to wait after ball resets
 
-const GLfloat MAX_SPEED = 0.05;
+// Board settings
+const GLfloat TOP_WALL = 1.0;         // location of top wall
+const GLfloat BOTTOM_WALL = -1.0;     // location of bottom wall
 
-const GLfloat START_SPEED = 0.01;
+// Ball settings
+const GLfloat BALL_RADIUS = 0.04;     // radius of ball
+const GLfloat Y_ACCEL = 0.0022;       // Y acceleration due to hitting a moving paddle
+const GLfloat X_ACCEL = 0.0003;       // X acceleration every time the paddle is hit
+const GLfloat MAX_SPEED = 0.05;       // Max speed the ball can move in x or y dir
+const GLfloat START_SPEED = 0.01;     // starting speed of the ball (+-50% of this)
 
 Paddle left_paddle, right_paddle;
+Rect board;
 Circle ball;
-
-mat4 proj_mat;
 
 GLsizei width = 512, height = 512;
 
@@ -30,11 +32,13 @@ GLfloat ballDx = 0.01, ballDy = 0.005;
 
 int resetBall = RESET_TIME; // start ball in 20 frames
 
+mat4 proj_mat;
+
 void resetDxDy()
 {
   // random direction with speeds from 1/2 START_SPEED to START_SPEED
-  ballDx = (rand() % 100 + 100.0) * START_SPEED/200.0;
-  ballDy = (rand() % 100 + 100.0) * START_SPEED/200.0;
+  ballDx = (rand() % 200 + 100.0) * START_SPEED/200.0;
+  ballDy = (rand() % 200 + 100.0) * START_SPEED/200.0;
 
   if ( rand() % 2 == 0 )
     ballDx *= -1;
@@ -87,6 +91,7 @@ void mousemove( int left, int top )
 void timer(int val)
 {
   GLfloat paddle_loc = (right_paddle.topY()+right_paddle.bottomY())/2.0;
+  mouseY = ballY;
 
   //cout << mouseY << ' ' << paddle_loc << endl;
   if ( mouseY > paddle_loc+right_paddle.getStepSize() )  // move up

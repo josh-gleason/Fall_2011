@@ -1,4 +1,4 @@
-/** @file Paddle.cc
+/** @file Paddle.h
   * @brief Contains all pieces of a paddle object. */
 
 #ifndef __JDG_PADDLE__
