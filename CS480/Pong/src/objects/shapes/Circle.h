@@ -13,7 +13,8 @@ class Circle : public Poly<vec2>
 public:
   Circle();
   Circle(const vec2& center, GLfloat radius,
-    const vec4& color=vec4(0.0,0.0,0.0,1.0));
+         const vec4& color=vec4(0.0,0.0,0.0,1.0),
+         int circlePoints=32);   ///<@ must be multiple of 4
   Circle(const Circle& rhs);
   ~Circle();
 
@@ -25,8 +26,8 @@ public:
 
   Circle& operator=(const Circle& rhs);
 protected:
-  static const int CIRC_POINTS = 4*8;  // must be a multiple of 4
-  static const int VERTEX_COUNT = CIRC_POINTS+2;
+  // number of points defining the perimeter of the circle
+  int circle_points;
   static const int DIMS = 2;
 };
 

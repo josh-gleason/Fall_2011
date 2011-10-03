@@ -11,6 +11,7 @@ HEADER_FILES = objects/generic/vec.h \
 OBJECT_NAMES = objects/shapes/Rect \
 							 objects/shapes/Circle \
 							 objects/components/Paddle \
+							 objects/components/Ball \
 							 utilities/InitShader
 
 ######################### SETTINGS VARIABLES ###################################

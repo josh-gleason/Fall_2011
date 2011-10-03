@@ -26,12 +26,16 @@ public:
   Paddle( const Paddle& rhs );
   const Paddle& operator= ( const Paddle& rhs );
 
-  GLfloat leftX() const;   ///< @brief get left edge location
-  GLfloat rightX() const;  ///< @brief get right edge location
-  GLfloat topY() const;    ///< @brief get top edge location
-  GLfloat bottomY() const; ///< @brief get bottom edge location
-  vec2 upperLeft() const;  ///< @brief get upper left point
-  vec2 lowerRight() const; ///< @brief get lower right point
+  GLfloat getLastMove() const; ///< @brief returns the last move
+  GLfloat getLeftX() const;    ///< @brief get left edge location
+  GLfloat getRightX() const;   ///< @brief get right edge location
+  GLfloat getTopY() const;     ///< @brief get top edge location
+  GLfloat getBottomY() const;  ///< @brief get bottom edge location
+  GLfloat getCenterX() const;  ///< @brief get center x coordinate
+  GLfloat getCenterY() const;  ///< @brief get center y coordinate
+  vec2 getCenter() const;      ///< @brief get center location of ball
+  vec2 getUpperLeft() const;   ///< @brief get upper left point
+  vec2 getLowerRight() const;  ///< @brief get lower right point
   
   /** @brief set the location of the lower and upper bound when moving */
   void setBounds(GLfloat bottomWall, GLfloat topWall);
@@ -62,11 +66,12 @@ public:
 
   /** @brief returns false if at a step cannot be taken (hit edge), if
     *        this returns false, move_flag is set to STILL */
-  bool takeStep();
+  void takeStep();
   
   /** @brief can be UP, DOWN or STILL */
   int move_flag;
 protected:
+  int last_move;
   Rect rect;
   mat4 projection;
   vec4 translation;

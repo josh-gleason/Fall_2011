@@ -3,6 +3,7 @@
 Paddle::Paddle(const vec2& upLeft, const vec2& lowRight, const vec4& color,
   GLfloat stepSize, GLfloat bottomWall, GLfloat topWall)
 : move_flag(STILL),
+  last_move(STILL),
   rect(upLeft, lowRight, color),
   projection(),   // creates identity projection
   translation(),  // no translation yet
@@ -17,6 +18,7 @@ Paddle::Paddle(const vec2& upLeft, const vec2& lowRight, const vec4& color,
 
 Paddle::Paddle( const Paddle& rhs )
 : move_flag(rhs.move_flag),
+  last_move(rhs.last_move),
   rect(rhs.rect),
   projection(rhs.projection),
   translation(rhs.translation),
@@ -32,6 +34,7 @@ Paddle::Paddle( const Paddle& rhs )
 const Paddle& Paddle::operator= ( const Paddle& rhs )
 {
   move_flag = rhs.move_flag;
+  last_move = rhs.last_move;
   rect = rhs.rect;
   projection = rhs.projection;
   translation = rhs.translation;
@@ -45,34 +48,54 @@ const Paddle& Paddle::operator= ( const Paddle& rhs )
   return *this;
 }
 
-GLfloat Paddle::leftX() const
+GLfloat Paddle::getLastMove() const
+{
+  return last_move;
+}
+
+GLfloat Paddle::getLeftX() const
 {
   return start_x+translation[0];
 }
 
-GLfloat Paddle::rightX() const
+GLfloat Paddle::getRightX() const
 {
   return start_x2+translation[0];
 }
 
-GLfloat Paddle::topY() const
+GLfloat Paddle::getTopY() const
 {
   return start_y+translation[1];
 }
 
-GLfloat Paddle::bottomY() const
+GLfloat Paddle::getBottomY() const
 {
   return start_y2+translation[1];
 }
 
-vec2 Paddle::upperLeft() const
+GLfloat Paddle::getCenterX() const
 {
-  return vec2(start_x+translation[0],start_y+translation[1]);
+  return (start_x+start_x2)/2.0+translation[0];
 }
 
-vec2 Paddle::lowerRight() const
+GLfloat Paddle::getCenterY() const
 {
-  return vec2(start_x2+translation[0],start_y2+translation[1]);
+  return (start_y+start_y2)/2.0+translation[1];
+}
+
+vec2 Paddle::getCenter() const
+{
+  return vec2(getCenterX(),getCenterY());
+}
+
+vec2 Paddle::getUpperLeft() const
+{
+  return vec2(getLeftX(),getTopY());
+}
+
+vec2 Paddle::getLowerRight() const
+{
+  return vec2(getRightX(),getBottomY());
 }
 
 void Paddle::setBounds(GLfloat bottomWall, GLfloat topWall)
@@ -130,24 +153,29 @@ void Paddle::setStepSize(GLfloat stepSize)
     step_size = stepSize;
 }
 
-bool Paddle::takeStep()
+void Paddle::takeStep()
 {
   switch (move_flag)
   {
     case DOWN:
       if ( start_y2+translation[1] - step_size < min_y )
-        return false;
+        last_move = STILL;
       else
+      {
         translation[1] -= step_size;
+        last_move = DOWN;
+      }
       break;
     case UP:
       if ( start_y+translation[1] + step_size > max_y )
-        return false;
+        last_move = STILL;
       else
+      {
         translation[1] += step_size;
+        last_move = UP;
+      }
       break;
     default:   // STILL
-      return false;
+      last_move = STILL;
   }
-  return true;
 }

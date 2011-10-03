@@ -1,6 +1,5 @@
-#include "Rect.h"
-#include "Circle.h"
 #include "Paddle.h"
+#include "Ball.h"
 
 using namespace std;
 
@@ -17,13 +16,23 @@ const GLfloat BALL_RADIUS = 0.04;     // radius of ball
 const GLfloat Y_ACCEL = 0.0022;       // Y acceleration due to hitting a moving paddle
 const GLfloat X_ACCEL = 0.0003;       // X acceleration every time the paddle is hit
 const GLfloat MAX_SPEED = 0.05;       // Max speed the ball can move in x or y dir
-const GLfloat START_SPEED = 0.01;     // starting speed of the ball (+-50% of this)
+const GLfloat START_SPEED = 0.007;     // starting speed of the ball (+-50% of this)
+
+const GLfloat BALL_MAX_Y = 0.9;
+const GLfloat BALL_MIN_Y = -0.9;
+const GLfloat PADDLE_MAX_Y = 1.0;
+const GLfloat PADDLE_MIN_Y = -1.0;
 
 Paddle left_paddle, right_paddle;
 Rect board;
-Circle ball;
+Ball ball;
 
-GLsizei width = 512, height = 512;
+const GLfloat PADDLE_STEP = 0.02;
+
+bool AI_enabled = true;
+bool paused = false;
+
+GLsizei width = 600, height = 600;
 
 GLfloat mouseY = 0.0;
 
@@ -34,11 +43,17 @@ int resetBall = RESET_TIME; // start ball in 20 frames
 
 mat4 proj_mat;
 
-void resetDxDy()
+int score[2] = {0,0};
+
+bool gameOver()
 {
-  // random direction with speeds from 1/2 START_SPEED to START_SPEED
-  ballDx = (rand() % 200 + 100.0) * START_SPEED/200.0;
-  ballDy = (rand() % 200 + 100.0) * START_SPEED/200.0;
+  return false; // TODO
+}
+
+vec2 randVelocity()
+{
+  GLfloat ballDx = (rand() % 200 + 100.0) * START_SPEED/200.0;
+  GLfloat ballDy = (rand() % 200 + 100.0) * START_SPEED/200.0;
 
   if ( rand() % 2 == 0 )
     ballDx *= -1;
@@ -47,6 +62,8 @@ void resetDxDy()
 
   if ( abs(ballDy) > abs(ballDx) )
     swap(ballDx,ballDy);
+
+  return vec2(ballDx, ballDy);
 }
 
 void keypress( unsigned char key, int x, int y )
@@ -87,143 +104,50 @@ void mousemove( int left, int top )
   else
     mouseY = 2.0/width*(height/2.0-top);
 }
+ 
+void setPaddleDir( Paddle& paddle, GLfloat referenceY )
+{
+  GLfloat paddle_loc = paddle.getCenterY();
+  
+  if ( referenceY > paddle_loc+paddle.getStepSize() )  // move up
+    paddle.move_flag = Paddle::UP;
+  else if ( referenceY < paddle_loc-paddle.getStepSize() ) // move down
+    paddle.move_flag = Paddle::DOWN; 
+  else
+    paddle.move_flag = Paddle::STILL;
+}
 
 void timer(int val)
 {
-  GLfloat paddle_loc = (right_paddle.topY()+right_paddle.bottomY())/2.0;
-  mouseY = ballY;
+  if ( paused )
+    return;
 
-  //cout << mouseY << ' ' << paddle_loc << endl;
-  if ( mouseY > paddle_loc+right_paddle.getStepSize() )  // move up
-    right_paddle.move_flag = Paddle::UP;
-  else if ( mouseY < paddle_loc-right_paddle.getStepSize() ) // move down
-    right_paddle.move_flag = Paddle::DOWN; 
+  // always move the paddle towards the ball or the mouse
+  if ( AI_enabled )
+    setPaddleDir(right_paddle, ball.getCenterY());
   else
-    right_paddle.move_flag = Paddle::STILL;
+    setPaddleDir(right_paddle, mouseY);
 
-  bool lMove, rMove;
   // move paddles
-  rMove = right_paddle.takeStep();
-  lMove = left_paddle.takeStep();
+  int goal;
 
-  //ball.takeStep();
-  if ( resetBall > 0 )
-    resetBall--;
-  else
+  right_paddle.takeStep();
+  left_paddle.takeStep();
+  goal = ball.takeStep(left_paddle, right_paddle);
+  
+  if ( goal != Ball::NO_GOAL )
   {
-    ballX += ballDx;
-    ballY += ballDy;
-    
-    // check top and bottom
-    if ( ballY+BALL_RADIUS > TOP_WALL && ballDy > 0 )
-    {
-      ballDy *= -1;
-      ballY += 2*ballDy;
-    }
-    else if ( ballY-BALL_RADIUS < BOTTOM_WALL && ballDy < 0 )
-    { 
-      ballDy *= -1;
-      ballY += 2*ballDy;
-    }
-
-    if ( ballDx < 0 && // check left paddle
-         ballX-BALL_RADIUS <= left_paddle.rightX() &&
-         ballY-BALL_RADIUS <= left_paddle.topY()-BALL_RADIUS*0.5 &&
-         ballY+BALL_RADIUS >= left_paddle.bottomY()+BALL_RADIUS*0.5 )
-    {
-      if ( ballX-BALL_RADIUS - ballDx > left_paddle.rightX() )
-      {
-        // check if paddle is moving
-        if ( lMove && left_paddle.move_flag == Paddle::UP && abs(ballY) < MAX_SPEED )
-          ballDy += Y_ACCEL;
-        else if ( lMove && abs(ballY) < MAX_SPEED )
-          ballDy -= Y_ACCEL;
-
-        ballDx *= -1;
-        ballX += 2*ballDx;
-        
-        if ( abs(ballDx) < MAX_SPEED )
-          ballDx += (ballDx > 0 ? X_ACCEL : -X_ACCEL);
-      }
-      else  // already lost but ball should reflect off top/bot of paddle
-      {
-        // determine which direction ball should go by which end of paddle is
-        // closer
-        if ( abs(ballY - left_paddle.bottomY()) <
-             abs(ballY - left_paddle.topY()) )
-        {
-          ballDy = -1*abs(ballDy);  // force down
-          ballY = left_paddle.bottomY()-BALL_RADIUS;
-        }
-        else
-        {
-          ballDy = abs(ballDy);     // force up
-          ballY = left_paddle.topY()+BALL_RADIUS;
-        }
-      }
-    }
-    else if ( ballDx > 0 && // check right paddle
-         ballX+BALL_RADIUS >= right_paddle.leftX() &&
-         ballY-BALL_RADIUS <= right_paddle.topY()-BALL_RADIUS*0.5 &&
-         ballY+BALL_RADIUS >= right_paddle.bottomY()+BALL_RADIUS*0.5 )
-    {  
-      if ( ballX+BALL_RADIUS - ballDx < right_paddle.leftX() )
-      {
-        // check if paddle is moving
-        if ( rMove && right_paddle.move_flag == Paddle::UP 
-          && abs(ballDy) < MAX_SPEED )
-          ballDy += Y_ACCEL;
-        else if ( rMove && abs(ballDy) < MAX_SPEED ) // down
-          ballDy -= Y_ACCEL;
-        
-        ballDx *= -1;
-        ballX += 2*ballDx;
-        
-        // speed up the ball every hit
-        if ( abs(ballDx) < MAX_SPEED )
-          ballDx += (ballDx > 0 ? X_ACCEL : -X_ACCEL);
-      }
-      else
-      {
-        // determine which direction ball should go by which end of paddle is
-        // closer
-        if ( abs(ballY - right_paddle.bottomY()) <
-             abs(ballY - right_paddle.topY()) )
-        {
-          ballDy = -1*abs(ballDy);  // force down
-          ballY = right_paddle.bottomY()-BALL_RADIUS;
-        }
-        else
-        {
-          ballDy = abs(ballDy);     // force up
-          ballY = right_paddle.topY()+BALL_RADIUS;
-        }
-      }
-    }
-
-    // check for lossing point
-    if ( ballX-BALL_RADIUS > 1.0 )  // right side lost
-    {
-      //TODO add point to left
-      resetBall = RESET_TIME;
-      ballX = 0;
-      ballY = 0;
-      resetDxDy();
-    }
-    else if ( ballX+BALL_RADIUS < -1.0 ) // left side lost
-    {
-      //TODO add point to right
-      resetBall = RESET_TIME;
-      ballX = 0;
-      ballY = 0;
-      resetDxDy();
-    }
-
+    ball.reset(vec2(0.0,0.0), randVelocity(), RESET_TIME);
+    if ( goal == Ball::SCORE_LEFT )
+      score[0] += 1;
+    else  // SCORE_RIGHT
+      score[1] += 1;
   }
 
   glutPostRedisplay();
   
-  glutTimerFunc(TIMER_INTERVAL,timer,val);
+  if ( !gameOver() )
+    glutTimerFunc(TIMER_INTERVAL,timer,val);
 }
 
 void reshape(GLsizei w, GLsizei h)
@@ -233,7 +157,7 @@ void reshape(GLsizei w, GLsizei h)
   glViewport(0,0,w,h);
 
   // set the projection matrix to a 2D orthographic projetion
-  if ( h > w )
+  if ( h < w )
     proj_mat = Ortho2D(-1.0,1.0,-1.0*h/w,1.0*h/w);
   else
     proj_mat = Ortho2D(-1.0*w/h,1.0*w/h,-1.0,1.0);
@@ -241,7 +165,7 @@ void reshape(GLsizei w, GLsizei h)
   // copy projection matrix to each object
   left_paddle.setProjection(proj_mat);
   right_paddle.setProjection(proj_mat);
-  //ball.setProjection(proj_mat);
+  ball.setProjection(proj_mat);
 
   glutPostRedisplay();
 
@@ -251,30 +175,48 @@ void reshape(GLsizei w, GLsizei h)
 
 void init()
 {
-  // set initial locations (everthing is centered at 0,0)
+  // intialize the paddles
   left_paddle = 
     Paddle(
       vec2(-0.03,0.2),
       vec2(0.03,-0.2),
-      vec4(0.8,0.2,0.2,1.0)
+      vec4(0.8,0.2,0.2,1.0),
+      PADDLE_STEP,
+      PADDLE_MIN_Y, // bottom
+      PADDLE_MAX_Y   // top
   );
 
   right_paddle = 
     Paddle(
       vec2(-0.03,0.2),
       vec2(0.03,-0.2),
-      vec4(0.8,0.2,0.2,1.0)
+      vec4(0.8,0.2,0.2,1.0),
+      PADDLE_STEP,
+      PADDLE_MIN_Y, // bottom
+      PADDLE_MAX_Y   // top
   );
-
-  ball = 
-    Circle(
-      vec2(ballX,ballY),
-      BALL_RADIUS,
-      vec4(0.2,0.2,0.8,1.0)
-    );
-
+  
+  // move to desired location
   left_paddle.setTranslation(-0.95,0);
   right_paddle.setTranslation(0.95,0);
+
+  // intitialize the ball
+  
+  // random direction with speeds from 1/2 START_SPEED to START_SPEED
+
+  ball = 
+    Ball(
+      vec2(0,0),
+      BALL_RADIUS,
+      vec4(0.2,0.2,0.8,1.0),
+      randVelocity(),
+      BALL_MIN_Y, // bottom
+      BALL_MAX_Y,  // top
+      -1.0, // left 
+      1.0   // right
+    );
+
+  ball.pause_count = RESET_TIME;
 
   left_paddle.init();
   right_paddle.init();
@@ -288,11 +230,9 @@ void display()
   glClear( GL_COLOR_BUFFER_BIT );
   
   // draw everything
-  vec4 trans_vec(ballX,ballY,0.0,0.0);
-  
   left_paddle.draw();
   right_paddle.draw();
-  ball.draw(proj_mat, trans_vec);
+  ball.draw();
 
   glutSwapBuffers();
 }
@@ -300,7 +240,7 @@ void display()
 int main(int argc, char *argv[])
 {
   srand(time(0));
-  resetDxDy();
+  //resetDxDy();
 
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
