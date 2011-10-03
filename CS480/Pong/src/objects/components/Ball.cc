@@ -215,10 +215,6 @@ int Ball::takeStep(const Paddle& left_paddle, const Paddle& right_paddle)
                           - _start_center[1];
       }
     }
-
-    // check for lossing point
-    if ( getRightX() < _min_x ) // left side lost
-      return SCORE_RIGHT;
   }
   else if ( _velocity[0] > 0 && // check right paddle
        getRightX() >= right_paddle.getLeftX() &&
@@ -263,10 +259,12 @@ int Ball::takeStep(const Paddle& left_paddle, const Paddle& right_paddle)
       }
     }
 
-    // check for loss
-    if ( getLeftX() > _max_x )  // right side lost
-      return SCORE_LEFT; 
   }
+  
+  if ( getRightX() < _min_x ) // left side lost
+    return SCORE_RIGHT;
+  if ( getLeftX() > _max_x )  // right side lost
+    return SCORE_LEFT; 
     
   return 0;
 }
