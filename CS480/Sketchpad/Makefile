@@ -12,7 +12,7 @@ OBJECT_NAMES = objects/shapes/Shape \
 
 ######################### SETTINGS VARIABLES ###################################
 
-LIBS				 = -lglut -lGLEW
+LIBS				 = -lGLU -lglut -lGLEW
 FLAGS				 = -g
 XTRA_INCLUDE = 
 

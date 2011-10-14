@@ -6,19 +6,19 @@
 struct ShapeParameters
 {
   ShapeParameters() :
-    center(0,0,0),
+    center(0.0,0.0),
   	translate(0.0),
-  	rotate(0.0),
-  	scale(1.0),
+  	theta(0.0),
+  	scale(1.0,1.0),
   	color(0.0,0.0,0.0,1.0),
   	filled(false),
   	selected(false)
   {}
 
-  vec3 center;
-  vec3 translate;
-  vec3 rotate;
-  vec3 scale;
+  vec2 center;
+  vec2 translate;
+  GLfloat theta;
+  vec2 scale;
 
   vec4 color;
   
@@ -32,14 +32,25 @@ struct ShaderValues
     vao(0),
     vbo(0),
     vPosition(0),
-    uColor(0),
+    center(0),
+    translate(0),
+    scale(0),
+    color(0),
     drawMode(GL_TRIANGLES)
   {}
 
   GLuint vao;
   GLuint vbo;
+
+  // attribute variables
   GLuint vPosition;
-  GLuint uColor;
+  
+  // uniform variables
+  GLuint center;
+  GLuint translate;
+  GLuint theta;
+  GLuint scale;
+  GLuint color;
 
   GLenum drawMode;
 };
@@ -48,7 +59,10 @@ class Shape
 {
   public:
     Shape();
-    Shape(int numVertecies, const vec4* vertices=NULL);
+    Shape(int numVertecies,
+          const vec4* vertices=NULL,
+          const vec4& color=vec4(0.0,0.0,0.0,1.0),
+          const vec2& center=vec2(0.0,0.0));
     ~Shape();
 
     void draw();
@@ -58,8 +72,9 @@ class Shape
     void translate(vec2 translation);
     void scale(vec2 scale);
 
-    void keyPress(unsigned int key, vec2 loc);
-    void selectShape(int value);
+    virtual void keyPress(unsigned int key, vec2 loc);
+    virtual void selectShape(int value);
+    virtual bool isInside(vec2 loc);
 
     const ShapeParameters& Params() const;
   private:

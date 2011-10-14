@@ -9,13 +9,16 @@ Shape::Shape() :
   m_vertex_count(0)
 {}
 
-Shape::Shape(int numVertecies, const vec4* vertices) :
+Shape::Shape(int numVertecies, const vec4* vertices, const vec4& color,
+  const vec2& center) :
   m_vertices(new vec4[numVertecies]),
   m_vertex_count(numVertecies)
 {
   if ( vertices != NULL )
     for ( int i = 0; i < numVertecies; ++i )
       m_vertices[i] = vertices[i];
+  m_params.center = center;
+  m_params.color = color;
 }
 
 Shape::~Shape()
@@ -30,19 +33,18 @@ void Shape::draw()
 
   // send model-view matrix to shader
   glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity(); 
-  /*glTranslatef(-m_params.center.x,
-               -m_params.center.y,
-               -m_params.center.z);
-  */
-  glRotatef(m_params.rotate.z, 0, 0, 1);
-  glScalef(m_params.scale.x,
-           m_params.scale.y,
-           m_params.scale.z);
-  /*glTranslatef(m_params.center.x+m_params.translate.x,
-               m_params.center.y+m_params.translate.y,
-               m_params.center.z+m_params.translate.z);*/
-  glUniform4fv(m_shader.uColor, 1, m_params.color);
+  glLoadIdentity();
+  
+  // for the vertex shader
+  glUniform2fv(m_shader.center, 1, m_params.center);
+  glUniform2fv(m_shader.translate, 1, m_params.translate);
+  glUniform1fv(m_shader.theta, 1, &m_params.theta);
+  glUniform2fv(m_shader.scale, 1, m_params.scale);
+ 
+  // for the fragment shader
+  glUniform4fv(m_shader.color, 1, m_params.color);
+  
+  // draw shape
   glDrawArrays(m_shader.drawMode, 0, m_vertex_count);
 }
 
@@ -64,22 +66,27 @@ void Shape::init(GLuint program)
   glVertexAttribPointer(m_shader.vPosition, 4, GL_FLOAT, GL_FALSE, 0,
       BUFFER_OFFSET(0));
 
-  m_shader.uColor = glGetUniformLocation(program, "uColor");
+  // get locations of uniform variables
+  m_shader.center = glGetUniformLocation(program, "center");
+  m_shader.translate = glGetUniformLocation(program, "translate");
+  m_shader.theta = glGetUniformLocation(program, "theta");
+  m_shader.scale = glGetUniformLocation(program, "scale");
+  m_shader.color = glGetUniformLocation(program, "color");
 }
 
-void Shape::translate(vec2 translation)
+void Shape::translate(vec2 translate)
 {
-  m_params.translate.x += translation.x;
-  m_params.translate.y += translation.y;
+  m_params.translate.x += translate.x;
+  m_params.translate.y += translate.y;
 }
 
 void Shape::rotate(GLfloat theta)
 {
-  m_params.rotate.z += theta;
+  m_params.theta += theta;
 
   // make sure theta stays in [0,360)
-  while ( m_params.rotate.z > 360.0 ) m_params.rotate.z -= 360.0;
-  while ( m_params.rotate.z <= 0.0  ) m_params.rotate.z += 360.0;
+  while ( m_params.theta > 360.0 ) m_params.theta -= 360.0;
+  while ( m_params.theta <= 0.0  ) m_params.theta += 360.0;
 }
 
 void Shape::scale(vec2 scaling)
@@ -88,6 +95,11 @@ void Shape::scale(vec2 scaling)
   m_params.scale.y *= scaling.y;
 }
 
-void keyPress(unsigned int key, vec2 loc) {}
-void selectShape(int value) {}
+bool Shape::isInside(vec2 loc)
+{
+  return true;
+}
+
+void Shape::keyPress(unsigned int key, vec2 loc) {}
+void Shape::selectShape(int value) {}
 

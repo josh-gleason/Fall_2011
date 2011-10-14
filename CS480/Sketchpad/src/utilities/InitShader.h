@@ -25,4 +25,6 @@ GLuint InitShader(
   const char* fShader  /**< [in] fragment shader filename. */
 );
 
+void printColMajorMatArrayf(GLfloat mat[16]);
+
 #endif // __OPEN_GL_SHADER_INIT__

@@ -1,4 +1,6 @@
+#include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <vector>
 #include "InitShader.h"
 
@@ -11,6 +13,18 @@ struct Shader {
   GLenum      type;
   GLstring    source;
 };
+
+void printColMajorMatArrayf(GLfloat mat[16])
+{
+  for ( int i = 0; i < 4; ++i )
+  {
+    std::cout << "( ";
+    for ( int j = 0; j < 4; ++j )
+      std::cout << std::setw(8) << std::setprecision(5) << mat[4*j+i] << ' ';
+    std::cout << ")\n";
+  }
+  std::cout << std::endl;
+}
 
 bool readShaderSource(const char* filename, GLstring& file)
 {

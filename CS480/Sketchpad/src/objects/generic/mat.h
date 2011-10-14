@@ -5,6 +5,8 @@
 #ifndef __JDG_MAT_H__
 #define __JDG_MAT_H__
 
+#include <iostream>
+#include <iomanip>
 #include <cstdlib>
 #include <cstdio>
 #include "vec.h"
