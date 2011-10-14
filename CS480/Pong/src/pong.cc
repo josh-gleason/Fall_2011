@@ -11,7 +11,8 @@ const void* FONT = GLUT_BITMAP_TIMES_ROMAN_24;
 const int MENU_RESTART_GAME = 0;
 const int MENU_PAUSE = 1;
 const int MENU_TOGGLE_AI = 2;
-  
+const int MENU_EXIT = 3;
+
 const int MENU_RED = 0;
 const int MENU_BLACK = 1;
 const int MENU_BLUE = 2;
@@ -189,6 +190,9 @@ void popupMenu(int value)
     case MENU_TOGGLE_AI:
       resetGame();
       AI_enabled = !AI_enabled;
+      break;
+    case MENU_EXIT:
+      exit(0);
       break;
   }
   glutPostRedisplay();
@@ -478,6 +482,7 @@ int main(int argc, char *argv[])
   glutAddMenuEntry("Toggle AI (Resets Game)",MENU_TOGGLE_AI);
   glutAddSubMenu("Change Ball Color",ball_color_menu);
   glutAddSubMenu("Change Paddle Colors",paddle_color_menu);
+  glutAddMenuEntry("Exit",MENU_EXIT);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 
   glutMainLoop();
