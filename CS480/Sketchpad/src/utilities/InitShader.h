@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <cstdlib>
 
 #ifdef __APPLE__
 #  include <OpenGL/OpenGL.h>
@@ -18,6 +19,20 @@
 
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 #define Print(x)  std::cerr << #x " = " << (x) << std::endl
+
+#ifndef NDEBUG
+#   define ASSERT(condition, message) \
+  do { \
+    if (! (condition)) { \
+      std::cerr << "Assertion `" #condition "` failed in " << __FILE__ \
+                << " line " << __LINE__ << ": " << message << std::endl; \
+      std::exit(EXIT_FAILURE); \
+    } \
+  } while (false)
+#else
+#   define ASSERT(condition, message) do { } while (false)
+#endif
+
 
 /** @brief Load vertex and fragment shader files into GPU. */
 GLuint InitShader(

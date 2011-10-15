@@ -22,16 +22,7 @@ GLuint projection;
 
 mat4 projectionMatrix;
 
-// Should contain all the shapes in the program
-struct ShapePtr
-{
-  ShapePtr() : p(NULL) {}
-  ~ShapePtr() { if (p != NULL) delete p; }
-  
-  Shape* p;
-};
-
-ShapePtr shape[2];
+list<Shape> shapes;
 
 void init()
 {
@@ -52,19 +43,11 @@ void init()
     vec4(1,1,0,1),
     vec4(1,-1,0,1) };
 
-  shape[0].p = new Shape(6, verts, vec4(0.8,0.2,0.2,1.0), vec2(0.0,0.0));
-  shape[0].p->init(program);
- 
-  shape[1].p = new Shape(6, verts, vec4(0.2,0.8,0.2,1.0), vec2(0.0,0.0));
-  shape[1].p->init(program);
+  shapes.push_back(Shape(6, verts, vec4(0.2,0.8,0.2,1.0), vec2(0.0,0.0)));
+  shapes.back().init(program);
 
-  shape[0].p->rotate(-45);
-  shape[0].p->scale(0.25);
-  shape[0].p->translate(vec2(0.5));
-
-  shape[1].p->rotate(30);
-  shape[1].p->scale(1.0/6.0);
-  shape[1].p->translate(vec2(1.0,-1.5));
+  shapes.back().scale(0.01);
+  shapes.back().translate(2.0,-1.25);
 
   glClearColor(0.5,0.5,0.5,1.0);
 }
@@ -76,8 +59,8 @@ void display()
   // set the projections matrix
   glUniformMatrix4fv(projection,1,GL_TRUE,projectionMatrix);
 
-  shape[0].p->draw();
-  shape[1].p->draw();
+  for ( list<Shape>::iterator i = shapes.begin(); i != shapes.end(); ++i )
+    i->draw();
 
   glutSwapBuffers();
 }
@@ -93,6 +76,31 @@ void resize(int width, int height)
     -(1.0+((GLfloat)height-(GLfloat)WIN_HEIGHT)/(WIN_HEIGHT*0.5)),  // bottom
     1.0   // top
   );
+
+  glutPostRedisplay();
+}
+
+void mousePress(int button, int state, int x, int y)
+{
+  if ( button != GLUT_RIGHT_BUTTON || state != GLUT_DOWN ) return;
+  vector<list<Shape>::iterator> shape_its(shapes.size());
+
+  int index = 0;
+  for ( list<Shape>::iterator i = shapes.begin();i != shapes.end(); ++i )
+    shape_its[index++] = i;
+
+  for ( size_t i = 0; i < shape_its.size(); ++i )
+  {
+    shapes.push_back(*shape_its[i]);
+    shapes.back().translate(vec2((rand()%255)/(255.0)*0.5*((rand()%2)*2-1),(rand()%255)/(255.0)*0.5*((rand()%2)*2-1)));
+    shapes.back().setColor(vec4((rand()%256)/(255.0),(rand()%256)/(255.0),(rand()%256)/(255.0),1.0));
+    shapes.back().rotate(rand() % 90);
+    shape_its[i]->translate(vec2((rand()%255)/(255.0)*0.5*((rand()%2)*2-1),(rand()%255)/(255.0)*0.5*((rand()%2)*2-1)));
+    shape_its[i]->rotate(rand() % 90);
+  }
+
+  std::cout << shapes.size() << std::endl;
+
 
   glutPostRedisplay();
 }
@@ -116,7 +124,7 @@ int main(int argc, char *argv[])
   //glutKeyboardUpFunc(keyboardUp);
   //glutMotionFunc(mouseActiveMotion);
   //glutPassiveMotionFunc(mousePassiveMotion); 
-  //glutMouseFunc(mousePress);
+  glutMouseFunc(mousePress);
 
   glutMainLoop();
 
