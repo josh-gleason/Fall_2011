@@ -2,12 +2,15 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <list>
+#include <vector>
+
+#include <boost/shared_ptr.hpp>
 
 #include "mat.h"
 #include "Shape.h"
 #include "Rect.h"
 #include "InitShader.h"
+#include "SketchPadDefs.h"
 
 using namespace std;
 
@@ -17,24 +20,41 @@ const char FSHADER_NAME[] = "../src/shaders/fshader.glsl";
 unsigned int WIN_HEIGHT = 500;
 unsigned int WIN_WIDTH = 500;
 
+typedef boost::shared_ptr<Shape> ShapePtr;
+
 mat4 projectionMatrix;
-list<Shape> shapes;
+vector<ShapePtr> shapes;
+
+ShapePtr drawingShape;
+
+// used when drawing shapes, some parameters may not apply to all objects
+ShapeParameters params;
+
+// the current mode of the program
+int programMode = DRAW_RECT;  // TODO: probably shouldn't be default mode
 
 // global shader indecies
 GLuint program;
 GLuint projection;
+
+// tells the program if the mouse is being held down
+bool mousePressed = false;
 
 void init()
 {
   program = InitShader(VSHADER_NAME, FSHADER_NAME);
   projection = glGetUniformLocation(program,"projection");
 
-  shapes.push_back(Rect(vec2(-1,1), vec2(1,-1), true, vec4(0.8,0.2,0.2,1.0)));
-  shapes.back().init(program);
+// TODO temp ///////////////////////////////////////////////////////////////
+  ShapePtr p(new Rect(vec2(-1,1), vec2(1,-1), true, vec4(0.8,0.2,0.2,1.0)));
+  shapes.push_back(p);
+  shapes.back()->init(program);
 
-  shapes.back().scale(0.2,0.25);
-  shapes.back().rotate(100);
-  shapes.back().translate(-0.4,-0.6);
+  shapes.back()->scale(-0.2,-0.25);
+  shapes.back()->rotate(100);
+  shapes.back()->translate(-0.4,-0.6);
+  shapes.back()->setThickness(3.0);
+////////////////////////////////////////////////////////////////////////////
 
   glClearColor(0.5,0.5,0.5,1.0);
 }
@@ -46,8 +66,11 @@ void display()
   // set the projections matrix
   glUniformMatrix4fv(projection,1,GL_TRUE,projectionMatrix);
 
-  for ( list<Shape>::iterator i = shapes.begin(); i != shapes.end(); ++i )
-    i->draw();
+  for ( vector<ShapePtr>::iterator i = shapes.begin(); i != shapes.end(); ++i )
+    (*i)->draw();
+
+  if ( drawingShape )
+    drawingShape->draw();
 
   glutSwapBuffers();
 }
@@ -96,19 +119,74 @@ vec2 mouse2Camera(int x, int y)
               static_cast<GLfloat>(-objY));
 }
 
+void mouseDown(vec2 coords)
+{
+  mousePressed = true;
+
+  switch (programMode)
+  {
+    case DRAW_RECT:
+      drawingShape = ShapePtr(
+        new Rect(coords, params.filled, params.color, params.thickness));
+      drawingShape->init(program);
+      drawingShape->mouseDown(coords, programMode);
+      break;
+  }
+}
+
+void mouseMove(vec2 coords)
+{
+  switch (programMode)
+  {
+    case DRAW_RECT:
+      drawingShape->mouseMove(coords, programMode);
+      break;
+  }
+}
+
+void mouseUp(vec2 coords)
+{
+  mousePressed = false;
+  
+  switch (programMode)
+  {
+    case DRAW_RECT:
+      drawingShape->mouseUp(coords, programMode);
+      shapes.push_back(drawingShape);
+      drawingShape = ShapePtr();
+      break;
+  }
+}
+
+void mouseMotion(int x, int y)
+{
+  if ( mousePressed )
+  {
+    vec2 coords = mouse2Camera(x,y);
+    mouseMove(coords);
+    glutPostRedisplay();
+  }
+}
+
 void mousePress(int button, int state, int x, int y)
 {
+  vec2 coords = mouse2Camera(x,y);
+
+  if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN )
+    mouseDown(coords);
+  else if ( button == GLUT_LEFT_BUTTON && state == GLUT_UP )
+    mouseUp(coords);
+
+  // TODO: temp ////////////////////////////////////////////////////////////
   if ( button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN )
   {
-    vec2 cameraCoords = mouse2Camera(x, y);
-
-    if ( shapes.back().isInside(cameraCoords) )
-      cout << "Inside" << endl;
+    params.color = vec4((rand()%256)/255.0, (rand()%256)/255.0, (rand()%256)/255.0, 1.0);
+    params.filled = ((rand()%2)==1);
+    params.thickness = (rand()%256)/255.0*9.0+1.0;
+    cout << params.color << endl;
   }
-  else if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN )
-  {
-    shapes.back().toggleFilled();
-  }
+  //////////////////////////////////////////////////////////////////////////
+  
   glutPostRedisplay();
 }
 
@@ -129,9 +207,9 @@ int main(int argc, char *argv[])
   //glutKeyboardFunc(keyboardPress);
 
   //glutKeyboardUpFunc(keyboardUp);
-  //glutMotionFunc(mouseActiveMotion);
   //glutPassiveMotionFunc(mousePassiveMotion); 
   glutMouseFunc(mousePress);
+  glutMotionFunc(mouseMotion);
 
   glutMainLoop();
 

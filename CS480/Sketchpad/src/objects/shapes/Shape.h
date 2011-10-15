@@ -121,7 +121,9 @@ class Shape
     mat4 getModelView(bool inverseTranspose = false) const;
 
     // auxilary functions (virtual)
-    virtual void mousePress(int button, int state, vec2 cameraCoordLoc);
+    virtual void mouseDown(vec2 cameraCoordLoc, int mode);
+    virtual void mouseMove(vec2 cameraCoordLoc, int mode);
+    virtual void mouseUp(vec2 cameraCoordLoc, int mode);
     virtual void toggleSelectShape(int value);
     virtual void selectShape(int value);
     virtual void unSelectShape(int value);
@@ -141,6 +143,7 @@ class Shape
     
     // reset shape called by reset with def_values=true
     void resetShape(bool def_values=true);
+    void setScale(const vec2& scaling);
 };
 
 #endif // _JDG_SHADE_CLASS_

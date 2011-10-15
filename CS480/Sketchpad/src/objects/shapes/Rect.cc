@@ -1,20 +1,41 @@
 #include "Rect.h"
+#include "SketchPadDefs.h"
 
 Rect::Rect() : Shape::Shape() {}
 
 Rect::Rect(const vec2& upperLeft, const vec2& lowerRight, bool filled,
-  const vec4& color) : Shape::Shape()
+  const vec4& color, GLfloat thickness) :
+  Shape::Shape(),
+  m_upperLeft(upperLeft),
+  m_lowerRight(lowerRight)
 {
   m_params.center = (upperLeft+lowerRight)*0.5;
   m_params.color = color;
-  
-  m_params.filled = filled;
+  m_params.thickness = thickness;
 
-  m_upperLeft = upperLeft;
-  m_lowerRight = lowerRight;
+  m_params.filled = filled;
 
   if ( filled ) fillShape();
   else          unFillShape();
+}
+    
+Rect::Rect(const vec2& startPoint, bool filled, const vec4& color,
+  GLfloat thickness) :
+  Shape::Shape(),
+  m_upperLeft(startPoint),
+  m_lowerRight(startPoint+vec2(1.0,-1.0))
+{
+  // so that scaling takes place from start point
+  m_params.center = m_upperLeft;
+
+  m_params.color = color;
+  m_params.thickness = thickness;
+
+  if ( filled ) fillShape();
+  else          unFillShape();
+
+  // make the object as small as possible
+  scale(0.0,0.0);
 }
 
 Rect::Rect(const Rect& rhs) : Shape::Shape(rhs) {}
@@ -30,8 +51,8 @@ vec2 Rect::getSize() const
   if ( m_vertices == NULL ) return vec2(0);
 
   // return width and height
-  return vec2( m_params.scale.x * abs(m_vertices[1].x - m_vertices[0].x),
-               m_params.scale.y * abs(m_vertices[3].y - m_vertices[0].x) );
+  return vec2( m_params.scale.x * fabs(m_vertices[1].x - m_vertices[0].x),
+               m_params.scale.y * fabs(m_vertices[3].y - m_vertices[0].x) );
 }
 
 void Rect::fillShape()
@@ -81,6 +102,40 @@ void Rect::unFillShape()
   {
     m_shader.initialized = false;
     init(m_shader.program);
+  }
+}
+  
+void Rect::mouseDown(vec2 cameraCoordLoc, int mode)
+{
+  switch (mode)
+  {
+    case DRAW_RECT: break;    // nothing to do
+  }
+}
+
+void Rect::mouseMove(vec2 cameraCoordLoc, int mode)
+{
+  switch (mode)
+  {
+    case DRAW_RECT:
+      setScale(vec2(cameraCoordLoc.x - m_upperLeft.x,
+                    m_upperLeft.y - cameraCoordLoc.y));
+      break;
+  }
+}
+
+void Rect::mouseUp(vec2 cameraCoordLoc, int mode)
+{
+  switch (mode)
+  {
+    case DRAW_RECT:
+      // need to set the center to the actual center now
+      setScale(vec2(cameraCoordLoc.x - m_upperLeft.x,
+                    m_upperLeft.y - cameraCoordLoc.y));
+      m_params.center = (m_upperLeft+m_lowerRight)*0.5;
+      translate(vec2(m_params.center.x-m_upperLeft.x-1+m_params.scale.x*0.5,
+                     m_upperLeft.y-m_params.center.y-m_params.scale.y*0.5));
+      break;
   }
 }
 

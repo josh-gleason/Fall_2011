@@ -110,6 +110,10 @@ void Shape::resetShape(bool defaultValues)
 
 void Shape::draw() const
 {
+  // don't draw something that is scaled too small
+  if ( fabs(m_params.scale.x) < 0.000011 && fabs(m_params.scale.y) < 0.000011 )
+    return;
+
   ASSERT(m_shader.initialized, "void Shape::init(GLuint program) must" 
          " be called before void Shape::draw()");
 
@@ -197,13 +201,18 @@ void Shape::scale(GLfloat scaleX, GLfloat scaleY)
 
 void Shape::scale(const vec2& scaling)
 {
-  m_params.scale.x *= scaling.x;
-  m_params.scale.y *= scaling.y;
+  setScale(m_params.scale*scaling);
+}
 
-  if ( abs(m_params.scale.x) < 0.00001 )
+// protected
+void Shape::setScale(const vec2& scaling)
+{
+  m_params.scale = scaling;
+/*
+  if ( fabs(m_params.scale.x) < 0.00001 )
     m_params.scale.x = 0.00001;
-  if ( abs(m_params.scale.y) < 0.00001 )
-    m_params.scale.y = 0.00001;
+  if ( fabs(m_params.scale.y) < 0.00001 )
+    m_params.scale.y = 0.00001;*/
 }
 
 void Shape::setColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
@@ -225,8 +234,6 @@ void Shape::setFilled(bool filled)
 {
   if ( filled == m_params.filled ) return;
  
-  std::cout << "Filled " << filled << std::endl;
-
   if ( filled )
     fillShape();
   else
@@ -366,7 +373,9 @@ bool Shape::isInside(vec2 loc)
         && mouseLoc.y >= bbox[0][1] && mouseLoc.y <= bbox[1][1] );
 }
 
-void Shape::mousePress(int button, int state, vec2 cameraCoordLoc) {}
+void Shape::mouseDown(vec2 cameraCoordLoc, int mode) {}
+void Shape::mouseMove(vec2 cameraCoordLoc, int mode) {}
+void Shape::mouseUp(vec2 cameraCoordLoc, int mode) {}
 
 void Shape::toggleSelectShape(int value)
 {
@@ -385,13 +394,11 @@ void Shape::unSelectShape(int value)
 
 void Shape::fillShape()
 {
-  std::cout << "Parent" << std::endl;
   m_params.filled = true;
 }
 
 void Shape::unFillShape()
 {
-  std::cout << "Parent" << std::endl;
   m_params.filled = false;
 }
 
