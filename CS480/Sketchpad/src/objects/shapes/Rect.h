@@ -15,6 +15,11 @@ class Rect : public Shape
     Rect(const Rect& rhs);
     const Rect& operator=(const Rect& rhs);
     vec2 getSize() const;
+  void fillShape();
+  void unFillShape();
+  protected:
+
+    vec2 m_upperLeft, m_lowerRight;
 };
 
 #endif

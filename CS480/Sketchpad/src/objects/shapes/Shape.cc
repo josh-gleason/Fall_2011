@@ -8,13 +8,15 @@ Shape::Shape() :
   m_vertex_count(0)
 {}
 
-Shape::Shape(int numVertecies, GLenum drawMode, const vec4* vertices,
+Shape::Shape(int numVertices, GLenum drawMode, const vec4* vertices,
   const vec4& color, const vec2& center) :
-  m_vertices(new vec4[numVertecies]),
-  m_vertex_count(numVertecies)
+  m_vertices(new vec4[numVertices]),
+  m_vertex_count(numVertices)
 {
+  m_vertices = new vec4[numVertices];
+  m_vertex_count = numVertices;
   if ( vertices != NULL )
-    for ( int i = 0; i < numVertecies; ++i )
+    for ( int i = 0; i < numVertices; ++i )
       m_vertices[i] = vertices[i];
   m_params.center = center;
   m_params.color = color;
@@ -113,7 +115,10 @@ void Shape::draw() const
 
   // bind correct vertex array object
   glBindVertexArray(m_shader.vao);
-  
+ 
+  if ( !m_params.filled )
+    glLineWidth(m_params.thickness);
+
   // for the vertex shader
   glUniform2fv(m_shader.center, 1, m_params.center);
   glUniform2fv(m_shader.translate, 1, m_params.translate);
@@ -125,6 +130,9 @@ void Shape::draw() const
   
   // draw shape
   glDrawArrays(m_shader.drawMode, 0, m_vertex_count);
+  
+  if ( !m_params.filled )
+    glLineWidth(1.0);
 }
 
 void Shape::init(GLuint program)
@@ -208,6 +216,28 @@ void Shape::setColor(const vec4& color)
   m_params.color = color;
 }
 
+void Shape::setThickness(GLfloat thickness)
+{
+  m_params.thickness = thickness;
+}
+
+void Shape::setFilled(bool filled)
+{
+  if ( filled == m_params.filled ) return;
+ 
+  std::cout << "Filled " << filled << std::endl;
+
+  if ( filled )
+    fillShape();
+  else
+    unFillShape();
+}
+
+void Shape::toggleFilled()
+{
+  setFilled(!m_params.filled);
+}
+
 GLfloat Shape::getTheta() const
 {
   return m_params.theta;
@@ -241,6 +271,16 @@ const ShapeParameters& Shape::getParams() const
 GLenum Shape::getDrawMode() const
 {
   return m_shader.drawMode;
+}
+    
+GLfloat Shape::getThickness() const
+{
+  return m_params.thickness;
+}
+
+bool Shape::getFilled() const
+{
+  return m_params.filled;
 }
     
 mat2 Shape::getBoundingBox() const
@@ -341,5 +381,17 @@ void Shape::selectShape(int value)
 void Shape::unSelectShape(int value)
 {
   m_params.selected = false;
+}
+
+void Shape::fillShape()
+{
+  std::cout << "Parent" << std::endl;
+  m_params.filled = true;
+}
+
+void Shape::unFillShape()
+{
+  std::cout << "Parent" << std::endl;
+  m_params.filled = false;
 }
 

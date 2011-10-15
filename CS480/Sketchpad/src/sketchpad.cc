@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <vector>
 #include <list>
 
 #include "mat.h"
@@ -99,13 +98,17 @@ vec2 mouse2Camera(int x, int y)
 
 void mousePress(int button, int state, int x, int y)
 {
-  if ( button != GLUT_RIGHT_BUTTON || state != GLUT_DOWN ) return;
+  if ( button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN )
+  {
+    vec2 cameraCoords = mouse2Camera(x, y);
 
-  vec2 cameraCoords = mouse2Camera(x, y);
-
-  if ( shapes.back().isInside(cameraCoords) )
-    cout << "Inside" << endl;
-
+    if ( shapes.back().isInside(cameraCoords) )
+      cout << "Inside" << endl;
+  }
+  else if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN )
+  {
+    shapes.back().toggleFilled();
+  }
   glutPostRedisplay();
 }
 
@@ -120,7 +123,7 @@ int main(int argc, char *argv[])
 
   glewInit();
   init();
-  
+
   glutDisplayFunc(display);
   glutReshapeFunc(resize);
   //glutKeyboardFunc(keyboardPress);

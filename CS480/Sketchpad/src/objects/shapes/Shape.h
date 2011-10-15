@@ -13,6 +13,7 @@ struct ShapeParameters
   	theta(0.0),
   	scale(1.0,1.0),
   	color(0.0,0.0,0.0,1.0),
+    thickness(1.0),
   	filled(true),
   	selected(false)
   {}
@@ -26,6 +27,8 @@ struct ShapeParameters
 
   vec4 color;
   
+  GLfloat thickness;  // used only if not filled
+
   bool filled;
   bool selected;
 };
@@ -70,7 +73,7 @@ class Shape
 {
   public:
     Shape();
-    Shape(int numVertecies,
+    Shape(int numVertices,
           GLenum drawMode,
           const vec4* vertices=NULL,
           const vec4& color=vec4(0.0,0.0,0.0,1.0),
@@ -92,6 +95,9 @@ class Shape
     void scale(GLfloat scaleX, GLfloat scaleY);
     void setColor(const vec4& color);
     void setColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
+    void setThickness(GLfloat);
+    void setFilled(bool filled);
+    void toggleFilled();
 
     // accessors
     GLfloat getTheta() const;
@@ -99,8 +105,12 @@ class Shape
     const vec2& getScale() const;
     const vec2 getCenter() const;  // returns center+translate
     const vec4& getColor() const;
-    const ShapeParameters& getParams() const;
+    GLfloat getThickness() const;
+    bool getFilled() const;
+
     GLenum getDrawMode() const;
+
+    const ShapeParameters& getParams() const;
 
     // returns 2x2 matrix with
     // [ minX minY ]
@@ -119,7 +129,11 @@ class Shape
     // project the mouse coords through the inverse transform of the object then
     // it should be easy to test if it's inside the original bounding box
     virtual bool isInside(vec2 loc);
+
+    virtual void fillShape();
+    virtual void unFillShape();
   protected:
+    
     ShapeParameters m_params;
     ShaderValues    m_shader;
     vec4*           m_vertices;
