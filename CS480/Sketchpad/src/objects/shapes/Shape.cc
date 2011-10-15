@@ -8,8 +8,8 @@ Shape::Shape() :
   m_vertex_count(0)
 {}
 
-Shape::Shape(int numVertecies, const vec4* vertices, const vec4& color,
-  const vec2& center) :
+Shape::Shape(int numVertecies, GLenum drawMode, const vec4* vertices,
+  const vec4& color, const vec2& center) :
   m_vertices(new vec4[numVertecies]),
   m_vertex_count(numVertecies)
 {
@@ -18,6 +18,7 @@ Shape::Shape(int numVertecies, const vec4* vertices, const vec4& color,
       m_vertices[i] = vertices[i];
   m_params.center = center;
   m_params.color = color;
+  m_shader.drawMode = drawMode;
 }
 
 Shape::~Shape()
@@ -190,6 +191,11 @@ void Shape::scale(const vec2& scaling)
 {
   m_params.scale.x *= scaling.x;
   m_params.scale.y *= scaling.y;
+
+  if ( abs(m_params.scale.x) < 0.00001 )
+    m_params.scale.x = 0.00001;
+  if ( abs(m_params.scale.y) < 0.00001 )
+    m_params.scale.y = 0.00001;
 }
 
 void Shape::setColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
@@ -217,7 +223,7 @@ const vec2& Shape::getScale() const
   return m_params.scale;
 }
 
-const vec2& Shape::getCenter() const
+const vec2 Shape::getCenter() const
 {
   return m_params.center+m_params.translate;
 }
@@ -227,13 +233,113 @@ const vec4& Shape::getColor() const
   return m_params.color;
 }
 
+const ShapeParameters& Shape::getParams() const
+{
+  return m_params;
+}
+
+GLenum Shape::getDrawMode() const
+{
+  return m_shader.drawMode;
+}
+    
+mat2 Shape::getBoundingBox() const
+{
+  ASSERT(m_shader.initialized && m_vertex_count > 0,"");
+
+  // determine bounding box
+  vec2 minVal(m_vertices[0].x, m_vertices[0].y);
+  vec2 maxVal(minVal);
+  
+  for ( int i = 0; i < m_vertex_count; ++i )
+  {
+    if ( m_vertices[i].x < minVal.x )
+      minVal.x = m_vertices[i].x;
+    if ( m_vertices[i].y < minVal.y )
+      minVal.y = m_vertices[i].y;
+    if ( m_vertices[i].x > maxVal.x )
+      maxVal.x = m_vertices[i].x;
+    if ( m_vertices[i].y > maxVal.y )
+      maxVal.y = m_vertices[i].y;
+  }
+
+  return mat2(minVal,
+              maxVal);
+}
+
+mat4 Shape::getModelView(bool inverse) const
+{
+  GLfloat thetaRads = m_params.theta * M_PI / 180.0;
+  GLfloat c = cos(thetaRads);
+  GLfloat s = sin(thetaRads);
+
+  // compute model-view matrix, based computing the follow transforms in order
+  // trans(-center)->rotate(theta)->scale(scale)->trans(center+translate)
+  GLfloat m11 = c*m_params.scale.x;
+  GLfloat m12 = -s*m_params.scale.x;
+  GLfloat m21 = s*m_params.scale.y;
+  GLfloat m22 = c*m_params.scale.y;
+
+  GLfloat m14 = m_params.center.x*(1.0-c*m_params.scale.x)+m_params.center.y
+      * m_params.scale.x*s+m_params.translate.x;
+
+  GLfloat m24 = m_params.center.y*(1.0-c*m_params.scale.y)-m_params.center.x
+      * m_params.scale.y*s+m_params.translate.y;
+                      
+  if ( !inverse )
+  {
+    return mat4(m11, m12, 0.0, m14,
+                m21, m22, 0.0, m24,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
+  }
+  else
+  {
+    GLfloat det = m11*m22-m12*m21;
+    return mat4(m22/det,              -m21/det,               0.0, 0.0,
+               -m12/det,               m11/det,               0.0, 0.0,
+               0.0,                    0.0,                   1.0, 0.0,
+               (m12*m24-m14*m22)/det, -(m11*m24-m14*m21)/det, 0.0, 1.0);
+
+    // non-transposed inverse
+    //return mat4(m22/det, -m12/det, 0.0,  (m12*m24-m14*m22)/det,
+    //           -m21/det,  m11/det, 0.0, -(m11*m24-m14*m21)/det,
+    //            0.0,      0.0,     1.0,  0.0,
+    //            0.0,      0.0,     0.0,  1.0);
+    
+  }
+}
+
 // virtual functions meant to be overloaded //////////////////////////
 
 bool Shape::isInside(vec2 loc)
 {
-  return true;
+  // simple bounding box test
+
+  mat2 bbox = getBoundingBox();
+  mat4 modelViewInverse = getModelView(true);
+
+  // get mouse location in model coordinates
+  vec4 mouseLoc = modelViewInverse*vec4(loc.x,loc.y,0,1);
+
+  return ( mouseLoc.x >= bbox[0][0] && mouseLoc.x <= bbox[1][0] 
+        && mouseLoc.y >= bbox[0][1] && mouseLoc.y <= bbox[1][1] );
 }
 
-void Shape::keyPress(unsigned int key, vec2 loc) {}
-void Shape::selectShape(int value) {}
+void Shape::mousePress(int button, int state, vec2 cameraCoordLoc) {}
+
+void Shape::toggleSelectShape(int value)
+{
+  m_params.selected = !m_params.selected;
+}
+
+void Shape::selectShape(int value)
+{
+  m_params.selected = true;
+}
+
+void Shape::unSelectShape(int value)
+{
+  m_params.selected = false;
+}
 

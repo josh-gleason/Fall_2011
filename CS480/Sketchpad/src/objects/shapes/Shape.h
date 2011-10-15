@@ -1,7 +1,9 @@
 #ifndef _JDG_SHAPE_CLASS_
 #define _JDG_SHAPE_CLASS_
 
-#include "vec.h"
+#include "mat.h"
+
+// TODO add a virtual toggleFilled() function
 
 struct ShapeParameters
 {
@@ -11,7 +13,7 @@ struct ShapeParameters
   	theta(0.0),
   	scale(1.0,1.0),
   	color(0.0,0.0,0.0,1.0),
-  	filled(false),
+  	filled(true),
   	selected(false)
   {}
 
@@ -69,6 +71,7 @@ class Shape
   public:
     Shape();
     Shape(int numVertecies,
+          GLenum drawMode,
           const vec4* vertices=NULL,
           const vec4& color=vec4(0.0,0.0,0.0,1.0),
           const vec2& center=vec2(0.0,0.0));
@@ -94,18 +97,28 @@ class Shape
     GLfloat getTheta() const;
     const vec2& getTranslation() const;
     const vec2& getScale() const;
-    const vec2& getCenter() const;  // returns center+translate
+    const vec2 getCenter() const;  // returns center+translate
     const vec4& getColor() const;
     const ShapeParameters& getParams() const;
+    GLenum getDrawMode() const;
+
+    // returns 2x2 matrix with
+    // [ minX minY ]
+    // [ maxX maxY ]
+    mat2 getBoundingBox() const;
+
+    // builds and returns the model-view matrix or it's inverse
+    mat4 getModelView(bool inverseTranspose = false) const;
 
     // auxilary functions (virtual)
-    virtual void keyPress(unsigned int key, vec2 loc);
+    virtual void mousePress(int button, int state, vec2 cameraCoordLoc);
+    virtual void toggleSelectShape(int value);
     virtual void selectShape(int value);
+    virtual void unSelectShape(int value);
     
     // project the mouse coords through the inverse transform of the object then
     // it should be easy to test if it's inside the original bounding box
     virtual bool isInside(vec2 loc);
-
   protected:
     ShapeParameters m_params;
     ShaderValues    m_shader;

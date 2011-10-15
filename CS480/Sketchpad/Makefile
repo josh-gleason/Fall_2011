@@ -8,6 +8,7 @@ HEADER_FILES = objects/generic/vec.h \
 
 # names of files that need binaries compiled (assumes each has .h and .cc)
 OBJECT_NAMES = objects/shapes/Shape \
+               objects/shapes/Rect \
 							 utilities/InitShader
 
 ######################### SETTINGS VARIABLES ###################################
