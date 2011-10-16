@@ -30,6 +30,7 @@ ShapePtr drawingShape;
 // used when drawing shapes, some parameters may not apply to all objects
 ShapeParameters params;
 
+
 // the current mode of the program
 int programMode = DRAW_RECT;  // TODO: probably shouldn't be default mode
 
