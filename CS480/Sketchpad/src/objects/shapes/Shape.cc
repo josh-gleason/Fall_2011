@@ -359,7 +359,7 @@ mat4 Shape::getModelView(bool inverse) const
 
 // virtual functions meant to be overloaded //////////////////////////
 
-bool Shape::isInside(vec2 loc)
+bool Shape::isInside(vec2 loc) const
 {
   // simple bounding box test
 

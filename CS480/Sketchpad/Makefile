@@ -1,6 +1,6 @@
 # Semi-Generic Makefile by Joshua Gleason
-
 ##################### ADD FILES TO THESE VARIABLES #############################
+default: all
 
 # files which are header ONLY
 HEADER_FILES = objects/generic/vec.h \
@@ -13,11 +13,13 @@ OBJECT_NAMES = objects/shapes/Shape \
 
 ######################### SETTINGS VARIABLES ###################################
 
-LIBS				 = -lGLU -lglut -lGLEW
-FLAGS				 = -g
-XTRA_INCLUDE = 
-
 EXE_NAME		 = sketchpad
+
+THIRD_PARTY_DIR = ./3rdParty
+
+LIBS				 = -lGLU -lglut -lGLEW ${THIRD_PARTY_DIR}/triangle/lib/libdel.a
+FLAGS				 = -g
+XTRA_INCLUDE = -I${THIRD_PARTY_DIR}/triangle/include/
 
 CC					 = g++
 
@@ -25,15 +27,22 @@ BUILD_DIR    = build/
 SRC_DIR		   = src/
 BINARY_DIR   = bin/
 
-#################### DO NOT MODIFY BELOW THIS POINT ############################
+######################### THIRD PARTY LIBRARIES ################################
 
-all: ${EXE_NAME}
+ALL_EXTRA    		= triangle
+PHONY_EXTRA  		= triangle
+
+## add any third party build commands here
+triangle:
+	cd ${THIRD_PARTY_DIR}/triangle/ && make
+
+#################### DO NOT MODIFY BELOW THIS POINT ############################
+all: ${ALL_EXTRA} ${EXE_NAME}
+
 ${EXE_NAME}: bin/${EXE_NAME}
 
 clean:
 	rm -rf build
-
-.PHONY:all doxygen ${EXE_NAME} clean
 
 HEADER_FILES += ${patsubst %,%.h,${OBJECT_NAMES}}
 OBJECT_FILES = ${OBJECT_NAMES} ${EXE_NAME}
@@ -56,3 +65,6 @@ ${OBJECTS}:${BUILD_DIR}%.o:${SRC_DIR}%.cc \
 		${patsubst %,${SRC_DIR}%,${HEADER_FILES}} Makefile
 	@mkdir -p ${dir $@}
 	${CC} -c $< -o $@ ${FLAGS} ${INCLUDE_DIRS}
+
+.PHONY:all ${EXE_NAME} clean doxygen ${PHONY_EXTRA}
+

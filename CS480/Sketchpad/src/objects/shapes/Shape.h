@@ -3,8 +3,6 @@
 
 #include "mat.h"
 
-// TODO add a virtual toggleFilled() function
-
 struct ShapeParameters
 {
   ShapeParameters() :
@@ -81,7 +79,7 @@ class Shape
     ~Shape();
 
     Shape(const Shape& rhs);
-    const Shape& operator=(const Shape& rhs);
+    virtual const Shape& operator=(const Shape& rhs);
 
     void reset();
     void init(GLuint program);
@@ -130,7 +128,7 @@ class Shape
     
     // project the mouse coords through the inverse transform of the object then
     // it should be easy to test if it's inside the original bounding box
-    virtual bool isInside(vec2 loc);
+    virtual bool isInside(vec2 loc) const;
 
     virtual void fillShape();
     virtual void unFillShape();
