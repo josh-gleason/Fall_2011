@@ -34,7 +34,7 @@ PHONY_EXTRA  		= triangle
 
 ## add any third party build commands here
 triangle:
-	cd ${THIRD_PARTY_DIR}/triangle/ && make
+	@cd ${THIRD_PARTY_DIR}/triangle/ && make --quiet
 
 #################### DO NOT MODIFY BELOW THIS POINT ############################
 all: ${ALL_EXTRA} ${EXE_NAME}
