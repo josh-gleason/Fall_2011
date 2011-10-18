@@ -17,11 +17,9 @@ OBJECT_NAMES = objects/shapes/Shape \
 
 EXE_NAME		 = sketchpad
 
-THIRD_PARTY_DIR = ./3rdParty
-
-LIBS				 = -lGLU -lglut -lGLEW ${THIRD_PARTY_DIR}/triangle/lib/libdel.a
+LIBS				 = -lGLU -lglut -lGLEW
 FLAGS				 = -g
-XTRA_INCLUDE = -I${THIRD_PARTY_DIR}/triangle/include/
+XTRA_INCLUDE =
 
 CC					 = g++
 

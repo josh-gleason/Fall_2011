@@ -1,10 +1,8 @@
 #ifndef _JDG_SHAPE_POLYGON_
 #define _JDG_SHAPE_POLYGON_
 
+#include <vector>
 #include "Shape.h"
-
-// used for triangulation
-#include <del_interface.hpp>
 
 class Poly : public Shape
 {

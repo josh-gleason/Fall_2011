@@ -49,25 +49,17 @@ void init()
   projection = glGetUniformLocation(program,"projection");
 
 // TODO temp ///////////////////////////////////////////////////////////////
-  ShapePtr p(new Rect(vec2(-1,1), vec2(1,-1), true, vec4(0.8,0.2,0.2,1.0)));
+  
+  // generate random polygon
+  const int VERT_NUMBER = 100;
+  vec2 pts[VERT_NUMBER];
+
+  for( int i = 0; i < VERT_NUMBER; ++i )
+    pts[i] = vec2((rand()%501)/500.0*2.0-1.0,
+                  (rand()%501)/500.0*2.0-1.0);
+
+  ShapePtr p(new Poly(pts,VERT_NUMBER,false,vec4(0.2,0.2,0.8,1.0)));
   shapes.push_back(p);
-  shapes.back()->init(program);
-
-  shapes.back()->scale(-0.2,-0.25);
-  shapes.back()->rotate(100);
-  shapes.back()->translate(-0.4,-0.6);
-  shapes.back()->setThickness(3.0);
-////////////////////////////////////////////////////////////////////////////
-  vec2 pts[6] = {
-    vec2(-0.5,0.5),
-    vec2(0.0,0.0),
-    vec2(-0.5,-0.7),
-    vec2(0.4,0.0),
-    vec2(0.8,-0.1),
-    vec2(0,-1) };
-
-  ShapePtr p2(new Poly(pts,6,true,vec4(0.2,0.2,0.8,1.0)));
-  shapes.push_back(p2);
   shapes.back()->init(program);
 ////////////////////////////////////////////////////////////////////////////
 
@@ -195,10 +187,13 @@ void mousePress(int button, int state, int x, int y)
   // TODO: temp ////////////////////////////////////////////////////////////
   if ( button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN )
   {
+    shapes.back()->toggleFilled();
+  /*
     params.color = vec4((rand()%256)/255.0, (rand()%256)/255.0, (rand()%256)/255.0, 1.0);
     params.filled = ((rand()%2)==1);
     params.thickness = (rand()%256)/255.0*9.0+1.0;
     cout << params.color << endl;
+  */
   }
   //////////////////////////////////////////////////////////////////////////
   

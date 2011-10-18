@@ -43,6 +43,13 @@ void Poly::fillShape()
   m_params.filled = true;
   tessellate(m_outline, &m_vertices, m_vertex_count);
   m_shader.drawMode = GL_TRIANGLES;
+  
+  // if it was initialized, initialize it again
+  if ( m_shader.initialized )
+  {
+    m_shader.initialized = false;
+    init(m_shader.program);
+  }
 }
 
 void Poly::unFillShape()
@@ -55,6 +62,13 @@ void Poly::unFillShape()
   for ( int i = 0; i < m_vertex_count; ++i ) 
     m_vertices[i] = vec4(m_outline[i][0], m_outline[i][1], 0.0, 1.0);
   m_shader.drawMode = GL_LINE_LOOP;
+  
+  // if it was initialized, initialize it again
+  if ( m_shader.initialized )
+  {
+    m_shader.initialized = false;
+    init(m_shader.program);
+  }
 }
 
 bool Poly::isInside(vec2 loc) const

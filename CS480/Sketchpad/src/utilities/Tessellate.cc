@@ -21,16 +21,7 @@ struct PolyData
 void beginCallback( GLenum type, void* polygon_data )
 {
   PolyData* data = (PolyData*)polygon_data;
-
-  if ( type == GL_TRIANGLE_FAN )
-    std::cout << "GL_TRIANGLE_FAN" << std::endl;
-  else if ( type == GL_TRIANGLE_STRIP )
-    std::cout << "GL_TRIANGLE_STRIP" << std::endl;
-  else if ( type == GL_TRIANGLES )
-    std::cout << "GL_TRIANGLES" << std::endl;
-  else
-    std::cout << "OTHER WHHHAT!!?" << std:: endl;
-
+  
   // a new type is starting
   data->type.push_back(type);
   data->count.push_back(0);
@@ -47,8 +38,6 @@ void vertexCallback( void *vertex_data, void *polygon_data )
 
   data->count.back()++;
 
-  std::cout << "VERTEX ADDED : " << *vertex << std::endl;
-  
   data->verts.push_back(*vertex);
 }
 
@@ -64,8 +53,6 @@ void combineCallback(GLdouble coords[3], void *vertex_data[4],
  
   // need to de-allocate him later
   data->deleteLater.push_back(out);
-
-  std::cout << "COMBINE : " << *out << std::endl;
 }
 
 void tessellate(const std::vector<vec2>& input, vec4** output, int& outsize)
