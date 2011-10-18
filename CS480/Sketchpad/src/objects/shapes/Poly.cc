@@ -3,6 +3,9 @@
 #include "InitShader.h"
 #include "Tessellate.h"
 
+// TODO: have 2 different lists of vertices so tesselation only needs to be
+//       done once per Polygon.
+
 Poly::Poly() : Shape::Shape() {}
 
 Poly::Poly(const vec2* vertices, int vertex_count, bool filled,
