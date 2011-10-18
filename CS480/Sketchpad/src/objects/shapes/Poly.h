@@ -9,15 +9,6 @@
 class Poly : public Shape
 {
   public: 
-    // used for tesselation
-    struct PolyData{
-      ShapeParameters* params;
-      ShaderValues* shader;
-      //vec4* vertices;
-      //int vertex_count;
-      std::vector<vec2> verts;
-    };
-
     Poly();
     Poly(const vec2* vertices,
             int vertex_count,
@@ -46,16 +37,9 @@ class Poly : public Shape
     // and assumes that m_outline has been set.  Calls Shape::reset(false)
     void triangulateVertices();
   protected:
+
+    // holds the outline for the polygon
     std::vector<vec2> m_outline;
-/*
-    void beginCallback( GLenum type );
-    void endCallback();
-    void vertexCallback( void *vertexData );
-    void combineCallback(GLdouble coords[3],
-                         GLdouble *vertex_data[4],
-                         GLfloat weight[4],
-                         void **outData);
-*/
 };
 
 #endif // _JDG_SHAPE_POLYGON

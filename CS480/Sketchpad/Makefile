@@ -10,7 +10,8 @@ HEADER_FILES = objects/generic/vec.h \
 OBJECT_NAMES = objects/shapes/Shape \
                objects/shapes/Rect \
                objects/shapes/Poly \
-							 utilities/InitShader
+							 utilities/InitShader \
+							 utilities/Tessellate
 
 ######################### SETTINGS VARIABLES ###################################
 
@@ -30,12 +31,11 @@ BINARY_DIR   = bin/
 
 ######################### THIRD PARTY LIBRARIES ################################
 
-ALL_EXTRA    		= triangle
-PHONY_EXTRA  		= triangle
+# names of extra commands to be executed
+ALL_EXTRA    		=
+PHONY_EXTRA  		=
 
 ## add any third party build commands here
-triangle:
-	@cd ${THIRD_PARTY_DIR}/triangle/ && make --quiet
 
 #################### DO NOT MODIFY BELOW THIS POINT ############################
 all: ${ALL_EXTRA} ${EXE_NAME}
