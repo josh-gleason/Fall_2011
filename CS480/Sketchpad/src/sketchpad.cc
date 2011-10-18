@@ -7,8 +7,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include "mat.h"
-#include "Shape.h"
 #include "Rect.h"
+#include "Poly.h"
 #include "InitShader.h"
 #include "SketchPadDefs.h"
 
@@ -41,6 +41,8 @@ GLuint projection;
 // tells the program if the mouse is being held down
 bool mousePressed = false;
 
+// TODO: implement an unProject function to avoid deprecated glu function
+
 void init()
 {
   program = InitShader(VSHADER_NAME, FSHADER_NAME);
@@ -55,6 +57,18 @@ void init()
   shapes.back()->rotate(100);
   shapes.back()->translate(-0.4,-0.6);
   shapes.back()->setThickness(3.0);
+////////////////////////////////////////////////////////////////////////////
+  vec2 pts[6] = {
+    vec2(-0.5,0.5),
+    vec2(0.0,0.0),
+    vec2(-0.5,-0.7),
+    vec2(0.4,0.0),
+    vec2(0.8,-0.1),
+    vec2(0,-1) };
+
+  ShapePtr p2(new Poly(pts,6,true,vec4(0.2,0.2,0.8,1.0)));
+  shapes.push_back(p2);
+  shapes.back()->init(program);
 ////////////////////////////////////////////////////////////////////////////
 
   glClearColor(0.5,0.5,0.5,1.0);

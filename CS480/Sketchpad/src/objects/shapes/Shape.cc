@@ -343,16 +343,12 @@ mat4 Shape::getModelView(bool inverse) const
   else
   {
     GLfloat det = m11*m22-m12*m21;
-    return mat4(m22/det,              -m21/det,               0.0, 0.0,
-               -m12/det,               m11/det,               0.0, 0.0,
-               0.0,                    0.0,                   1.0, 0.0,
-               (m12*m24-m14*m22)/det, -(m11*m24-m14*m21)/det, 0.0, 1.0);
-
+    
     // non-transposed inverse
-    //return mat4(m22/det, -m12/det, 0.0,  (m12*m24-m14*m22)/det,
-    //           -m21/det,  m11/det, 0.0, -(m11*m24-m14*m21)/det,
-    //            0.0,      0.0,     1.0,  0.0,
-    //            0.0,      0.0,     0.0,  1.0);
+    return mat4(m22/det, -m12/det, 0.0,  (m12*m24-m14*m22)/det,
+               -m21/det,  m11/det, 0.0, -(m11*m24-m14*m21)/det,
+                0.0,      0.0,     1.0,  0.0,
+                0.0,      0.0,     0.0,  1.0);
     
   }
 }

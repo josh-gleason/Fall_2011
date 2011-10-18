@@ -36,7 +36,9 @@ class mat2 {
   mat2( const vec2& a, const vec2& b )
   { _m[0] = a;  _m[1] = b;  }
 
-  mat2( GLfloat m00, GLfloat m10, GLfloat m01, GLfloat m11 )
+  // I DONT WANT COLUMN MAJOR HERE WHEN EVERYTHING ELSE IS ROW MAJOR!!! -Josh
+  //mat2( GLfloat m00, GLfloat m10, GLfloat m01, GLfloat m11 )
+  mat2( GLfloat m00, GLfloat m01, GLfloat m10, GLfloat m11 )
   { _m[0] = vec2( m00, m01 ); _m[1] = vec2( m10, m11 ); }
 
   mat2( const mat2& m ) {
@@ -194,9 +196,13 @@ class mat3 {
   mat3( const vec3& a, const vec3& b, const vec3& c )
   { _m[0] = a;  _m[1] = b;  _m[2] = c;  }
 
-  mat3( GLfloat m00, GLfloat m10, GLfloat m20,
-      GLfloat m01, GLfloat m11, GLfloat m21,
-      GLfloat m02, GLfloat m12, GLfloat m22 ) 
+  // I DONT WANT COLUMN MAJOR HERE WHEN EVERYTHING ELSE IS ROW MAJOR!!! -Josh
+  //mat3( GLfloat m00, GLfloat m10, GLfloat m20,
+  //      GLfloat m01, GLfloat m11, GLfloat m21,
+  //      GLfloat m02, GLfloat m12, GLfloat m22 ) 
+  mat3( GLfloat m00, GLfloat m01, GLfloat m02,
+        GLfloat m10, GLfloat m11, GLfloat m12,
+        GLfloat m20, GLfloat m21, GLfloat m22 ) 
   {
     _m[0] = vec3( m00, m01, m02 );
     _m[1] = vec3( m10, m11, m12 );
@@ -366,10 +372,15 @@ class mat4 {
   mat4( const vec4& a, const vec4& b, const vec4& c, const vec4& d )
   { _m[0] = a;  _m[1] = b;  _m[2] = c;  _m[3] = d; }
 
-  mat4( GLfloat m00, GLfloat m10, GLfloat m20, GLfloat m30,
-      GLfloat m01, GLfloat m11, GLfloat m21, GLfloat m31,
-      GLfloat m02, GLfloat m12, GLfloat m22, GLfloat m32,
-      GLfloat m03, GLfloat m13, GLfloat m23, GLfloat m33 )
+  // I DONT WANT COLUMN MAJOR HERE WHEN EVERYTHING ELSE IS ROW MAJOR!!! -Josh
+  //mat4( GLfloat m00, GLfloat m10, GLfloat m20, GLfloat m30,
+  //    GLfloat m01, GLfloat m11, GLfloat m21, GLfloat m31,
+  //    GLfloat m02, GLfloat m12, GLfloat m22, GLfloat m32,
+  //    GLfloat m03, GLfloat m13, GLfloat m23, GLfloat m33 )
+  mat4( GLfloat m00, GLfloat m01, GLfloat m02, GLfloat m03,
+        GLfloat m10, GLfloat m11, GLfloat m12, GLfloat m13,
+        GLfloat m20, GLfloat m21, GLfloat m22, GLfloat m23,
+        GLfloat m30, GLfloat m31, GLfloat m32, GLfloat m33 )
   {
     _m[0] = vec4( m00, m01, m02, m03 );
     _m[1] = vec4( m10, m11, m12, m13 );

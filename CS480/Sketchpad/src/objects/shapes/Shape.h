@@ -139,8 +139,8 @@ class Shape
     vec4*           m_vertices;
     int             m_vertex_count;
     
-    // reset shape called by reset with def_values=true
-    void resetShape(bool def_values=true);
+    // reset shape called by reset with defvalues=true
+    void resetShape(bool defaultValues=true);
     void setScale(const vec2& scaling);
 };
 
