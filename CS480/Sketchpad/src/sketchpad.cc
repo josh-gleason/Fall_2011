@@ -7,8 +7,11 @@
 #include <boost/shared_ptr.hpp>
 
 #include "mat.h"
+
 #include "Rect.h"
 #include "Poly.h"
+#include "LineSegs.h"
+
 #include "InitShader.h"
 #include "SketchPadDefs.h"
 
@@ -65,6 +68,14 @@ void init()
   shapes.back()->scale(1.2,1.2);
   shapes.back()->translate(0.25,-0.25);
   shapes.back()->rotate(-45);
+
+  p = ShapePtr(new LineSegs(pts,VERT_NUMBER,vec4(0.8,0.2,0.2,1.0),3.0));
+  shapes.push_back(p);
+  shapes.back()->init(program);
+  
+  shapes.back()->scale(0.7,0.7);
+  shapes.back()->translate(-0.25,0.25);
+  shapes.back()->rotate(60);
 ////////////////////////////////////////////////////////////////////////////
 
   glClearColor(0.5,0.5,0.5,1.0);

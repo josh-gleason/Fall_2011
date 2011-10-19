@@ -10,6 +10,7 @@ HEADER_FILES = objects/generic/vec.h \
 OBJECT_NAMES = objects/shapes/Shape \
                objects/shapes/Rect \
                objects/shapes/Poly \
+               objects/shapes/LineSegs \
 							 utilities/InitShader \
 							 utilities/Tessellate \
 							 utilities/PointTests

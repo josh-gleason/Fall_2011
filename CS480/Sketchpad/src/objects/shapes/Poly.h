@@ -13,12 +13,13 @@ class Poly : public Shape
             bool filled=true,
             const vec4& color=vec4(0.0,0.0,0.0,1.0),
             GLfloat thickness=1.0);
-    Poly(const vec2& startPoint,
-            bool filled=true,
-            const vec4& color=vec4(0.0,0.0,0.0,1.0),
-            GLfloat thickness=1.0);
 
     Poly(const Poly& rhs);
+    Poly(const vec2& startPoint,
+         bool filled=true,
+         const vec4& color=vec4(0.0,0.0,0.0,1.0),
+         GLfloat thickness=1.0);
+
     ~Poly();
     const Poly& operator=(const Poly& rhs);
 

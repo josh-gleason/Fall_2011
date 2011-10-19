@@ -76,7 +76,7 @@ class Shape
           const vec4* vertices=NULL,
           const vec4& color=vec4(0.0,0.0,0.0,1.0),
           const vec2& center=vec2(0.0,0.0));
-    ~Shape();
+    virtual ~Shape();
 
     Shape(const Shape& rhs);
     virtual const Shape& operator=(const Shape& rhs);

@@ -16,7 +16,8 @@ Poly::Poly() :
 {}
 
 Poly::Poly(const vec2* vertices, int vertex_count, bool filled,
-  const vec4& color, GLfloat thickness)
+  const vec4& color, GLfloat thickness) :
+  Shape::Shape()
 {
   m_params.color = color;
   m_params.thickness = thickness;
@@ -45,9 +46,47 @@ Poly::Poly(const vec2& startPoint, bool filled, const vec4& color,
   // TODO
 }
 
-Poly::Poly(const Poly& rhs) :
-  Shape::Shape(rhs)
-{}
+Poly::Poly(const Poly& rhs)
+{
+  m_params = rhs.m_params;
+  m_shader = rhs.m_shader;
+  m_vertex_count = rhs.m_vertex_count;
+  m_vertex_count_filled = rhs.m_vertex_count_filled;
+  m_vertex_count_outline = rhs.m_vertex_count_outline;
+
+  if ( &rhs == this ) return;
+  
+  m_vertices_filled = NULL;
+  m_vertices_outline = NULL;
+  
+  if ( rhs.m_vertices_filled != NULL )
+  {
+    m_vertices_filled = new vec4[m_vertex_count_filled];
+
+    for ( unsigned i = 0; i < m_vertex_count_filled; ++i )
+      m_vertices_filled[i] = rhs.m_vertices_filled[i];
+
+    if ( rhs.m_vertices_filled == rhs.m_vertices )
+      m_vertices = m_vertices_filled;
+  }
+ 
+  if ( rhs.m_vertices_outline != NULL )
+  {
+    m_vertices_outline = new vec4[m_vertex_count_outline];
+
+    for ( unsigned i = 0; i < m_vertex_count_outline; ++i )
+      m_vertices_outline[i] = rhs.m_vertices_outline[i];
+    
+    if ( rhs.m_vertices_outline == rhs.m_vertices )
+      m_vertices = m_vertices_outline;
+  }
+
+  if ( m_vertices != NULL && m_shader.initialized )
+  {
+    m_shader.initialized = false;
+    init(m_shader.program);
+  }
+}
 
 Poly::~Poly()
 {
@@ -172,13 +211,11 @@ bool Poly::isInside(vec2 loc) const
   vec4 mouseLoc = modelViewInverse*vec4(loc.x,loc.y,0,1);
   vec2 mouseLoc2 = vec2(mouseLoc.x, mouseLoc.y);
 
-  std::cout << loc << " -> " << mouseLoc << std::endl;
-
   if ( !( mouseLoc.x >= bbox[0][0] && mouseLoc.x <= bbox[1][0] 
        && mouseLoc.y >= bbox[0][1] && mouseLoc.y <= bbox[1][1] ) )
     return false;
 
-  if ( m_params.filled )
+  if ( m_params.filled )  // triangles
   {
     for ( unsigned i = 0; i < m_vertex_count_filled; i+=3 )
       if ( pointInTriangle(&(m_vertices_filled[i]), mouseLoc2) )
@@ -186,14 +223,16 @@ bool Poly::isInside(vec2 loc) const
   }
   else    // lines
   {
+    GLfloat scaledThresh =
+      (m_params.scale.x + m_params.scale.y) * 0.5 * POINT_NEAR_LINE_THRESH;
     for ( unsigned i = 0; i < m_vertex_count_outline-1; i++ )
       if ( pointNearLineSegment(&(m_vertices_outline[i]), mouseLoc2,
-           POINT_NEAR_LINE_THRESH) )
+                                  scaledThresh) )
         return true;
     
     vec4 lastFirst[2] = {m_vertices_outline[m_vertex_count_outline-1],
                          m_vertices_outline[0]};
-    if ( pointNearLineSegment(lastFirst, mouseLoc2, POINT_NEAR_LINE_THRESH) )
+    if ( pointNearLineSegment(lastFirst, mouseLoc2, scaledThresh) )
       return true;
   }
 
