@@ -11,7 +11,8 @@ OBJECT_NAMES = objects/shapes/Shape \
                objects/shapes/Rect \
                objects/shapes/Poly \
 							 utilities/InitShader \
-							 utilities/Tessellate
+							 utilities/Tessellate \
+							 utilities/PointTests
 
 ######################### SETTINGS VARIABLES ###################################
 

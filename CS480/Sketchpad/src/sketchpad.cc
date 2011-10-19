@@ -55,12 +55,16 @@ void init()
   vec2 pts[VERT_NUMBER];
 
   for( int i = 0; i < VERT_NUMBER; ++i )
-    pts[i] = vec2((rand()%501)/500.0*2.0-1.0,
-                  (rand()%501)/500.0*2.0-1.0);
+    pts[i] = vec2((rand()%501)/500.0*1.5-0.75,
+                  (rand()%501)/500.0*1.5-0.75);
 
   ShapePtr p(new Poly(pts,VERT_NUMBER,false,vec4(0.2,0.2,0.8,1.0)));
   shapes.push_back(p);
   shapes.back()->init(program);
+  
+  shapes.back()->scale(1.2,1.2);
+  shapes.back()->translate(0.25,-0.25);
+  shapes.back()->rotate(-45);
 ////////////////////////////////////////////////////////////////////////////
 
   glClearColor(0.5,0.5,0.5,1.0);
@@ -194,6 +198,14 @@ void mousePress(int button, int state, int x, int y)
     params.thickness = (rand()%256)/255.0*9.0+1.0;
     cout << params.color << endl;
   */
+  }
+
+  if ( button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN )
+  {
+    if ( shapes.back()->isInside(coords) )
+      std::cout << "Inside" << std::endl;
+    else
+      std::cout << "Outside" << std::endl;
   }
   //////////////////////////////////////////////////////////////////////////
   

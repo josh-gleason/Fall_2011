@@ -96,14 +96,17 @@ void Shape::resetShape(bool defaultValues)
   }
 
   if ( m_vertices != NULL )
+  {
     delete [] m_vertices;
+    m_vertices = NULL;
+    m_vertex_count = 0;
+  }
   
   // reset to default values
   if ( defaultValues )
   {
     m_params = ShapeParameters();
     m_shader = ShaderValues();
-    m_vertices = NULL;
     m_vertex_count = 0;
   }
 }
@@ -316,6 +319,7 @@ mat2 Shape::getBoundingBox() const
 
 mat4 Shape::getModelView(bool inverse) const
 {
+  std::cout << "THETA: " << m_params.theta << std::endl;
   GLfloat thetaRads = m_params.theta * M_PI / 180.0;
   GLfloat c = cos(thetaRads);
   GLfloat s = sin(thetaRads);
@@ -357,6 +361,7 @@ mat4 Shape::getModelView(bool inverse) const
 
 bool Shape::isInside(vec2 loc) const
 {
+  if ( !m_shader.initialized ) return false;
   // simple bounding box test
 
   mat2 bbox = getBoundingBox();

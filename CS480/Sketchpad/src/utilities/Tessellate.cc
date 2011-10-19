@@ -55,14 +55,12 @@ void combineCallback(GLdouble coords[3], void *vertex_data[4],
   data->deleteLater.push_back(out);
 }
 
-void tessellate(const std::vector<vec2>& input, vec4** output, int& outsize)
+void tessellate(const vec4* input, unsigned insize, vec4** output, unsigned& outsize)
 {
   GLUtesselator *tess;
   tess = gluNewTess();
 
   ASSERT( tess != 0, "Unable to allocate GLUtesselator" );
-
-  unsigned insize = input.size();
 
   // holds data used during callbacks
   PolyData polygon_data;
@@ -83,16 +81,16 @@ void tessellate(const std::vector<vec2>& input, vec4** output, int& outsize)
   gluTessBeginContour(tess);
 
   GLdouble** coords = new GLdouble*[insize];
-  for ( size_t i = 0; i < insize; ++i )
+  for ( unsigned i = 0; i < insize; ++i )
   {
     coords[i] = new GLdouble[3];
     coords[i][0] = input[i].x;
     coords[i][1] = input[i].y;
     coords[i][2] = 0.0;
-    
-    gluTessVertex(tess, coords[i], (void*)&input[i]);
-  }
   
+    gluTessVertex(tess, coords[i], (void*)&(input[i]));
+  }
+ 
   gluTessEndContour(tess);
   gluTessEndPolygon(tess);
 
@@ -104,8 +102,10 @@ void tessellate(const std::vector<vec2>& input, vec4** output, int& outsize)
     delete [] coords[i];
   delete [] coords;
 
-  for ( size_t i = 0; i < polygon_data.deleteLater.size(); ++i )
-    delete polygon_data.deleteLater[i];
+  // de-allocate any memory allocated in the combine function
+  for ( std::vector<vec2*>::iterator i = polygon_data.deleteLater.begin();
+        i != polygon_data.deleteLater.end(); ++i )
+    delete (*i);
 
   // convert vertices so that they are all triangles
   std::vector<vec2> output_vec;

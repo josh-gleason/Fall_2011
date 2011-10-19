@@ -19,6 +19,7 @@ class Poly : public Shape
             GLfloat thickness=1.0);
 
     Poly(const Poly& rhs);
+    ~Poly();
     const Poly& operator=(const Poly& rhs);
 
     void fillShape();
@@ -29,15 +30,11 @@ class Poly : public Shape
     void mouseDown(vec2 cameraCoordLoc, int mode);
     void mouseMove(vec2 cameraCorrdLoc, int mode);
     void mouseUp(vec2 cameraCorrdLoc, int mode);
-    
-    // takes current list of vertices assuming it represents a line loop
-    // and triangulates the points.  Changes m_vertex_count and m_vertices
-    // and assumes that m_outline has been set.  Calls Shape::reset(false)
-    void triangulateVertices();
-  protected:
-
-    // holds the outline for the polygon
-    std::vector<vec2> m_outline;
+  protected: 
+    vec4* m_vertices_filled;
+    vec4* m_vertices_outline;
+    unsigned m_vertex_count_filled;
+    unsigned m_vertex_count_outline;
 };
 
 #endif // _JDG_SHAPE_POLYGON
