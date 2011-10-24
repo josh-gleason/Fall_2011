@@ -105,7 +105,7 @@ void Rect::unFillShape()
   }
 }
   
-void Rect::mouseDown(vec2 cameraCoordLoc, int mode)
+void Rect::mouseDownChild(vec2 cameraCoordLoc, int mode)
 {
   switch (mode)
   {
@@ -113,7 +113,7 @@ void Rect::mouseDown(vec2 cameraCoordLoc, int mode)
   }
 }
 
-void Rect::mouseMove(vec2 cameraCoordLoc, int mode)
+void Rect::mouseMoveChild(vec2 cameraCoordLoc, int mode)
 {
   switch (mode)
   {
@@ -124,7 +124,7 @@ void Rect::mouseMove(vec2 cameraCoordLoc, int mode)
   }
 }
 
-void Rect::mouseUp(vec2 cameraCoordLoc, int mode)
+void Rect::mouseUpChild(vec2 cameraCoordLoc, int mode)
 {
   switch (mode)
   {

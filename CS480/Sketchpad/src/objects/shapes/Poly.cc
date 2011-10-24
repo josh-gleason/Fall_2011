@@ -239,17 +239,17 @@ bool Poly::isInside(vec2 loc) const
   return false;
 }
 
-void Poly::mouseDown(vec2 cameraCoordLoc, int mode)
+void Poly::mouseDownChild(vec2 cameraCoordLoc, int mode)
 {
   // TODO  
 }
 
-void Poly::mouseMove(vec2 cameraCorrdLoc, int mode)
+void Poly::mouseMoveChild(vec2 cameraCorrdLoc, int mode)
 {
   // TODO  
 }
 
-void Poly::mouseUp(vec2 cameraCorrdLoc, int mode)
+void Poly::mouseUpChild(vec2 cameraCorrdLoc, int mode)
 {
   // TODO  
 }

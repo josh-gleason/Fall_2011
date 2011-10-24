@@ -117,11 +117,12 @@ class Shape
 
     // builds and returns the model-view matrix or it's inverse
     mat4 getModelView(bool inverseTranspose = false) const;
+    
+    void mouseDown(vec2 cameraCoordLoc, int mode);
+    void mouseMove(vec2 cameraCoordLoc, int mode);  // must be called after mouseDown
+    void mouseUp(vec2 cameraCoordLoc, int mode);    // must be called after mouseMove
 
     // auxilary functions (virtual)
-    virtual void mouseDown(vec2 cameraCoordLoc, int mode);
-    virtual void mouseMove(vec2 cameraCoordLoc, int mode);
-    virtual void mouseUp(vec2 cameraCoordLoc, int mode);
     virtual void toggleSelectShape(int value);
     virtual void selectShape(int value);
     virtual void unSelectShape(int value);
@@ -133,12 +134,19 @@ class Shape
     virtual void fillShape();
     virtual void unFillShape();
   protected:
+    // called by mouseDown and MouseMove and MouseUp
+    virtual void mouseDownChild(vec2 cameraCoordLoc, int mode);
+    virtual void mouseMoveChild(vec2 cameraCoordLoc, int mode);
+    virtual void mouseUpChild(vec2 cameraCoordLoc, int mode);
     
     ShapeParameters m_params;
     ShaderValues    m_shader;
     vec4*           m_vertices;
     int             m_vertex_count;
     
+    // allows 3 global mouse coords to be used for mouse events
+    vec2 mouseCoords[3];
+
     // reset shape called by reset with defvalues=true
     void resetShape(bool defaultValues=true);
     void setScale(const vec2& scaling);

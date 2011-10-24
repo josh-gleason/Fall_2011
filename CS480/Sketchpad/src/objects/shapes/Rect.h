@@ -24,13 +24,12 @@ class Rect : public Shape
     vec2 getSize() const;
     void fillShape();
     void unFillShape();
-  
-    void mouseDown(vec2 cameraCoordLoc, int mode);
-    void mouseMove(vec2 cameraCoordLoc, int mode);
-    void mouseUp(vec2 cameraCoordLoc, int mode);
   protected:
-
     vec2 m_upperLeft, m_lowerRight;
+  
+    void mouseDownChild(vec2 cameraCoordLoc, int mode);
+    void mouseMoveChild(vec2 cameraCoordLoc, int mode);
+    void mouseUpChild(vec2 cameraCoordLoc, int mode);
 };
 
 #endif

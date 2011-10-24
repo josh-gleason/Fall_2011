@@ -27,15 +27,15 @@ class Poly : public Shape
     void unFillShape();
     
     bool isInside(vec2 loc) const;
-
-    void mouseDown(vec2 cameraCoordLoc, int mode);
-    void mouseMove(vec2 cameraCorrdLoc, int mode);
-    void mouseUp(vec2 cameraCorrdLoc, int mode);
   protected: 
     vec4* m_vertices_filled;
     vec4* m_vertices_outline;
     unsigned m_vertex_count_filled;
     unsigned m_vertex_count_outline;
+
+    void mouseDownChild(vec2 cameraCoordLoc, int mode);
+    void mouseMoveChild(vec2 cameraCorrdLoc, int mode);
+    void mouseUpChild(vec2 cameraCorrdLoc, int mode);
 };
 
 #endif // _JDG_SHAPE_POLYGON

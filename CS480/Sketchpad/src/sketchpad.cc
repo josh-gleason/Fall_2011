@@ -55,26 +55,26 @@ void init()
   
   // generate random polygon
   const int VERT_NUMBER = 100;
-  vec2 pts[VERT_NUMBER];
+  vec2 pts[VERT_NUMBER+1];
 
   for( int i = 0; i < VERT_NUMBER; ++i )
     pts[i] = vec2((rand()%501)/500.0*1.5-0.75,
                   (rand()%501)/500.0*1.5-0.75);
+  pts[VERT_NUMBER]=pts[0];
 
-  ShapePtr p(new Poly(pts,VERT_NUMBER,false,vec4(0.2,0.2,0.8,1.0)));
+  ShapePtr p;
+  p = ShapePtr(new Poly(pts,VERT_NUMBER,false,vec4(0.2,0.2,0.8,1.0)));
   shapes.push_back(p);
   shapes.back()->init(program);
   
-  shapes.back()->scale(1.2,1.2);
-  shapes.back()->translate(0.25,-0.25);
-  shapes.back()->rotate(-45);
-
-  p = ShapePtr(new LineSegs(pts,VERT_NUMBER,vec4(0.8,0.2,0.2,1.0),3.0));
+  shapes.back()->scale(2);
+  shapes.back()->rotate(60);
+  
+  p = ShapePtr(new LineSegs(pts,VERT_NUMBER+1,vec4(0.8,0.2,0.2,1.0),10.0));
   shapes.push_back(p);
   shapes.back()->init(program);
   
-  shapes.back()->scale(0.7,0.7);
-  shapes.back()->translate(-0.25,0.25);
+  shapes.back()->scale(2);
   shapes.back()->rotate(60);
 ////////////////////////////////////////////////////////////////////////////
 
@@ -202,7 +202,7 @@ void mousePress(int button, int state, int x, int y)
   // TODO: temp ////////////////////////////////////////////////////////////
   if ( button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN )
   {
-    shapes.back()->toggleFilled();
+    shapes.front()->toggleFilled();
   /*
     params.color = vec4((rand()%256)/255.0, (rand()%256)/255.0, (rand()%256)/255.0, 1.0);
     params.filled = ((rand()%2)==1);

@@ -2,6 +2,7 @@
 #include <GL/glut.h>
 #include "Shape.h"
 #include "InitShader.h"
+#include "SketchPadDefs.h"
 
 Shape::Shape() :
   m_vertices(NULL),
@@ -123,7 +124,7 @@ void Shape::draw() const
   // bind correct vertex array object
   glBindVertexArray(m_shader.vao);
  
-  if ( !m_params.filled )
+//  if ( !m_params.filled )
     glLineWidth(m_params.thickness);
 
   // for the vertex shader
@@ -374,9 +375,54 @@ bool Shape::isInside(vec2 loc) const
         && mouseLoc.y >= bbox[0][1] && mouseLoc.y <= bbox[1][1] );
 }
 
-void Shape::mouseDown(vec2 cameraCoordLoc, int mode) {}
-void Shape::mouseMove(vec2 cameraCoordLoc, int mode) {}
-void Shape::mouseUp(vec2 cameraCoordLoc, int mode) {}
+void Shape::mouseDown(vec2 cameraCoordLoc, int mode)
+{
+  switch (mode)
+  {
+    case ROTATE_SHAPE:
+      break;
+    case SCALE_SHAPE:
+      break;
+    case TRANSLATE_SHAPE:
+      break;
+    default:
+      mouseDownChild(cameraCoordLoc, mode);
+  }
+}
+
+void Shape::mouseMove(vec2 cameraCoordLoc, int mode)
+{
+  switch (mode)
+  {
+    case ROTATE_SHAPE:
+      break;
+    case SCALE_SHAPE:
+      break;
+    case TRANSLATE_SHAPE:
+      break;
+    default:
+      mouseMoveChild(cameraCoordLoc, mode);
+  }
+}
+
+void Shape::mouseUp(vec2 cameraCoordLoc, int mode)
+{
+  switch (mode)
+  {
+    case ROTATE_SHAPE:
+      break;
+    case SCALE_SHAPE:
+      break;
+    case TRANSLATE_SHAPE:
+      break;
+    default:
+      mouseUpChild(cameraCoordLoc, mode);
+  }
+}
+
+void Shape::mouseDownChild(vec2 cameraCoordLoc, int mode) {}
+void Shape::mouseMoveChild(vec2 cameraCoordLoc, int mode) {}
+void Shape::mouseUpChild(vec2 cameraCoordLoc, int mode) {}
 
 void Shape::toggleSelectShape(int value)
 {

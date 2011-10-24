@@ -27,12 +27,11 @@ class LineSegs : public Shape
     // void unFillShape();
 
     bool isInside(vec2 loc) const;
-
-    void mouseDown(vec2 cameraCoordLoc, int mode);
-    void mouseMove(vec2 cameraCoordLoc, int mode);
-    void mouseUp(vec2 cameraCoordLoc, int mode);
   protected:
-    
+
+    void mouseDownChild(vec2 cameraCoordLoc, int mode);
+    void mouseMoveChild(vec2 cameraCoordLoc, int mode);
+    void mouseUpChild(vec2 cameraCoordLoc, int mode);    
 };
 
 #endif // _JDG_SHAPES_LINESEGS_
