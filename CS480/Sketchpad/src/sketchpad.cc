@@ -35,7 +35,10 @@ ShapeParameters params;
 
 
 // the current mode of the program
-int programMode = DRAW_RECT;  // TODO: probably shouldn't be default mode
+int programMode = MODE_NONE;
+
+int selectedIndex = -1;
+ShapePtr selectedShape;
 
 // global shader indecies
 GLuint program;
@@ -46,6 +49,11 @@ bool mousePressed = false;
 
 // TODO: implement an unProject function to avoid deprecated glu function
 
+vec4 colorInv(vec4 input)
+{
+  return vec4(1.0,1.0,1.0,2.0)-input;
+}
+
 void init()
 {
   program = InitShader(VSHADER_NAME, FSHADER_NAME);
@@ -54,16 +62,16 @@ void init()
 // TODO temp ///////////////////////////////////////////////////////////////
   
   // generate random polygon
-  const int VERT_NUMBER = 100;
+  /*const int VERT_NUMBER = 100;
   vec2 pts[VERT_NUMBER+1];
 
   for( int i = 0; i < VERT_NUMBER; ++i )
     pts[i] = vec2((rand()%501)/500.0*1.5-0.75,
                   (rand()%501)/500.0*1.5-0.75);
   pts[VERT_NUMBER]=pts[0];
-
+  */
   ShapePtr p;
-  p = ShapePtr(new Poly(pts,VERT_NUMBER,false,vec4(0.2,0.2,0.8,1.0)));
+  /*p = ShapePtr(new Poly(pts,VERT_NUMBER,false,vec4(0.2,0.2,0.8,1.0)));
   shapes.push_back(p);
   shapes.back()->init(program);
   
@@ -76,6 +84,14 @@ void init()
   
   shapes.back()->scale(2);
   shapes.back()->rotate(60);
+  */
+  p = ShapePtr(new Rect(vec2(-0.5,0.5),vec2(0.5,-0.5),false,vec4(0.0,0.0,0.0,1.0),1.0));
+  shapes.push_back(p);
+  shapes.back()->init(program);
+
+  shapes.back()->unFillShape();
+  shapes.back()->setThickness(2.0);
+  shapes.back()->setColor(vec4(1.0,1.0,0.0,1.0));
 ////////////////////////////////////////////////////////////////////////////
 
   glClearColor(0.5,0.5,0.5,1.0);
@@ -88,13 +104,28 @@ void display()
   // set the projections matrix
   glUniformMatrix4fv(projection,1,GL_TRUE,projectionMatrix);
 
+  int index = 0;
   for ( vector<ShapePtr>::iterator i = shapes.begin(); i != shapes.end(); ++i )
+  {
+    if ( selectedIndex == index && selectedIndex >= 0 )
+      selectedShape->draw();
     (*i)->draw();
-
+    index++;
+  }
+    
   if ( drawingShape )
     drawingShape->draw();
 
   glutSwapBuffers();
+}
+
+void clearSelection()
+{
+  if ( selectedIndex >= 0 )
+  {
+    selectedIndex = -1;
+    glutPostRedisplay();
+  }
 }
 
 void resize(int width, int height)
@@ -147,12 +178,63 @@ void mouseDown(vec2 coords)
 
   switch (programMode)
   {
-    case DRAW_RECT:
+    case MODE_DRAW_RECT:
       drawingShape = ShapePtr(
-        new Rect(coords, params.filled, params.color, params.thickness));
+// TODO        new Rect(coords, params.filled, params.color, params.thickness));
+        new Rect(coords, false, params.color, params.thickness));
       drawingShape->init(program);
       drawingShape->mouseDown(coords, programMode);
       break;
+    case MODE_SELECT:
+      unsigned start = 0;
+      if ( selectedIndex >= 0 )
+        start = selectedIndex;
+      
+      unsigned index = start;
+      do {
+        if ( index == 0 )
+          index = shapes.size();
+        index--;
+        if ( shapes[index]->isInside(coords) )
+        {
+          if ( selectedIndex != index )
+          {
+            selectedIndex = index;
+            if      ( typeid(*shapes[index]) == typeid(Rect) )
+            {
+              cout << "Selected" << endl;
+              selectedShape = ShapePtr(new
+                Rect(*(reinterpret_cast<Rect*>(&(*shapes[index])))));
+            }
+            else if ( typeid(*shapes[index]) == typeid(Poly) )
+              selectedShape = ShapePtr(new
+                Poly(*(reinterpret_cast<Poly*>(&(*shapes[index])))));
+            else if ( typeid(*shapes[index]) == typeid(LineSegs) )
+              selectedShape = ShapePtr(new
+                LineSegs(*(reinterpret_cast<LineSegs*>(&(*shapes[index])))));
+            
+            if ( selectedIndex >= 0 )
+              shapes[selectedIndex]->unSelectShape();
+            shapes[index]->selectShape();
+
+            selectedShape->unFillShape();
+            if ( shapes[selectedIndex]->getFilled() )
+              selectedShape->setThickness(20.0);
+            else
+              selectedShape->setThickness(
+                shapes[selectedIndex]->getThickness()+19.0);
+            selectedShape->setColor(colorInv(shapes[index]->getColor()));
+            glutPostRedisplay();
+
+            cout << selectedShape->getThickness() << endl;
+          
+          }
+          cout << selectedIndex << endl;
+          break;
+        }
+
+      } while ( index != start );
+
   }
 }
 
@@ -160,7 +242,7 @@ void mouseMove(vec2 coords)
 {
   switch (programMode)
   {
-    case DRAW_RECT:
+    case MODE_DRAW_RECT:
       drawingShape->mouseMove(coords, programMode);
       break;
   }
@@ -172,7 +254,7 @@ void mouseUp(vec2 coords)
   
   switch (programMode)
   {
-    case DRAW_RECT:
+    case MODE_DRAW_RECT:
       drawingShape->mouseUp(coords, programMode);
       shapes.push_back(drawingShape);
       drawingShape = ShapePtr();
@@ -201,15 +283,7 @@ void mousePress(int button, int state, int x, int y)
 
   // TODO: temp ////////////////////////////////////////////////////////////
   if ( button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN )
-  {
-    shapes.front()->toggleFilled();
-  /*
-    params.color = vec4((rand()%256)/255.0, (rand()%256)/255.0, (rand()%256)/255.0, 1.0);
-    params.filled = ((rand()%2)==1);
-    params.thickness = (rand()%256)/255.0*9.0+1.0;
-    cout << params.color << endl;
-  */
-  }
+    shapes.back()->toggleFilled();
 
   if ( button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN )
   {
@@ -221,6 +295,87 @@ void mousePress(int button, int state, int x, int y)
   //////////////////////////////////////////////////////////////////////////
   
   glutPostRedisplay();
+}
+
+
+void keyboardPress(unsigned char key, int x, int y)
+{
+  if ( programMode == MODE_NONE )
+  {
+    switch (key)
+    {
+      // change of mode cases
+      case 'r': // draw rectangle
+        clearSelection();
+        programMode = MODE_DRAW_RECT;
+        break;
+      case 'p': // draw polygon
+        clearSelection();
+        programMode = MODE_DRAW_POLY;
+        break;
+      case 'c': // draw circle
+        clearSelection();
+        programMode = MODE_DRAW_CIRCLE;
+        break;
+      case 'g': // draw line segment
+        clearSelection();
+        programMode = MODE_DRAW_LINE_SEG;
+        break;
+      
+      case 's': // select mode
+        clearSelection();
+        programMode = MODE_SELECT;
+        break;
+      case 'l': // color mode
+        if ( selectedIndex >= 0 )
+          programMode = MODE_CHANGE_COLOR;
+        break;
+    }
+  }
+  else
+  {
+    switch (key)
+    {
+      case 27:  // Escape TODO
+        if ( !mousePressed )
+        {
+          clearSelection();
+          programMode = MODE_NONE;
+          cout << "Reset Program Mode" << endl;
+        }
+        else
+          cout << "Mouse pressed?" << endl;
+        break;
+    }
+  }
+}
+
+
+//// glut special function keys
+// GLUT_KEY_F1   F1 function key
+// GLUT_KEY_F2   F2 function key
+// GLUT_KEY_F3   F3 function key
+// GLUT_KEY_F4   F4 function key
+// GLUT_KEY_F5   F5 function key
+// GLUT_KEY_F6   F6 function key
+// GLUT_KEY_F7   F7 function key
+// GLUT_KEY_F8   F8 function key
+// GLUT_KEY_F9   F9 function key
+// GLUT_KEY_F10    F10 function key
+// GLUT_KEY_F11    F11 function key
+// GLUT_KEY_F12    F12 function key
+// GLUT_KEY_LEFT   Left function key
+// GLUT_KEY_RIGHT    Right function key
+// GLUT_KEY_UP   Up function key
+// GLUT_KEY_DOWN   Down function key
+// GLUT_KEY_PAGE_UP  Page Up function key
+// GLUT_KEY_PAGE_DOWN  Page Down function key
+// GLUT_KEY_HOME   Home function key
+// GLUT_KEY_END    End function key
+// GLUT_KEY_INSERT   Insert function key
+void specialPress(int key, int x, int y)
+{
+
 }
 
 int main(int argc, char *argv[])
@@ -237,7 +392,8 @@ int main(int argc, char *argv[])
 
   glutDisplayFunc(display);
   glutReshapeFunc(resize);
-  //glutKeyboardFunc(keyboardPress);
+  glutKeyboardFunc(keyboardPress);
+  glutSpecialFunc(specialPress);
 
   //glutKeyboardUpFunc(keyboardUp);
   //glutPassiveMotionFunc(mousePassiveMotion); 

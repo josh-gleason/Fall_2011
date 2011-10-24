@@ -38,7 +38,11 @@ Rect::Rect(const vec2& startPoint, bool filled, const vec4& color,
   scale(0.0,0.0);
 }
 
-Rect::Rect(const Rect& rhs) : Shape::Shape(rhs) {}
+Rect::Rect(const Rect& rhs) :
+  Shape::Shape(rhs),
+  m_upperLeft(rhs.m_upperLeft),
+  m_lowerRight(rhs.m_lowerRight)
+{}
 
 const Rect& Rect::operator=(const Rect& rhs)
 {
@@ -109,7 +113,7 @@ void Rect::mouseDownChild(vec2 cameraCoordLoc, int mode)
 {
   switch (mode)
   {
-    case DRAW_RECT: break;    // nothing to do
+    case MODE_DRAW_RECT: break;    // nothing to do
   }
 }
 
@@ -117,7 +121,7 @@ void Rect::mouseMoveChild(vec2 cameraCoordLoc, int mode)
 {
   switch (mode)
   {
-    case DRAW_RECT:
+    case MODE_DRAW_RECT:
       setScale(vec2(cameraCoordLoc.x - m_upperLeft.x,
                     m_upperLeft.y - cameraCoordLoc.y));
       break;
@@ -128,7 +132,7 @@ void Rect::mouseUpChild(vec2 cameraCoordLoc, int mode)
 {
   switch (mode)
   {
-    case DRAW_RECT:
+    case MODE_DRAW_RECT:
       // need to set the center to the actual center now
       setScale(vec2(cameraCoordLoc.x - m_upperLeft.x,
                     m_upperLeft.y - cameraCoordLoc.y));

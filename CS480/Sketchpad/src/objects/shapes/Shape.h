@@ -123,9 +123,9 @@ class Shape
     void mouseUp(vec2 cameraCoordLoc, int mode);    // must be called after mouseMove
 
     // auxilary functions (virtual)
-    virtual void toggleSelectShape(int value);
-    virtual void selectShape(int value);
-    virtual void unSelectShape(int value);
+    virtual void toggleSelectShape(int value=0);
+    virtual void selectShape(int value=0);
+    virtual void unSelectShape(int value=0);
     
     // project the mouse coords through the inverse transform of the object then
     // it should be easy to test if it's inside the original bounding box

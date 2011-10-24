@@ -124,8 +124,7 @@ void Shape::draw() const
   // bind correct vertex array object
   glBindVertexArray(m_shader.vao);
  
-//  if ( !m_params.filled )
-    glLineWidth(m_params.thickness);
+  glLineWidth(m_params.thickness);
 
   // for the vertex shader
   glUniform2fv(m_shader.center, 1, m_params.center);
@@ -320,7 +319,6 @@ mat2 Shape::getBoundingBox() const
 
 mat4 Shape::getModelView(bool inverse) const
 {
-  std::cout << "THETA: " << m_params.theta << std::endl;
   GLfloat thetaRads = m_params.theta * M_PI / 180.0;
   GLfloat c = cos(thetaRads);
   GLfloat s = sin(thetaRads);
@@ -379,11 +377,11 @@ void Shape::mouseDown(vec2 cameraCoordLoc, int mode)
 {
   switch (mode)
   {
-    case ROTATE_SHAPE:
+    case MODE_ROTATE_SHAPE:
       break;
-    case SCALE_SHAPE:
+    case MODE_SCALE_SHAPE:
       break;
-    case TRANSLATE_SHAPE:
+    case MODE_TRANSLATE_SHAPE:
       break;
     default:
       mouseDownChild(cameraCoordLoc, mode);
@@ -394,11 +392,11 @@ void Shape::mouseMove(vec2 cameraCoordLoc, int mode)
 {
   switch (mode)
   {
-    case ROTATE_SHAPE:
+    case MODE_ROTATE_SHAPE:
       break;
-    case SCALE_SHAPE:
+    case MODE_SCALE_SHAPE:
       break;
-    case TRANSLATE_SHAPE:
+    case MODE_TRANSLATE_SHAPE:
       break;
     default:
       mouseMoveChild(cameraCoordLoc, mode);
@@ -409,11 +407,11 @@ void Shape::mouseUp(vec2 cameraCoordLoc, int mode)
 {
   switch (mode)
   {
-    case ROTATE_SHAPE:
+    case MODE_ROTATE_SHAPE:
       break;
-    case SCALE_SHAPE:
+    case MODE_SCALE_SHAPE:
       break;
-    case TRANSLATE_SHAPE:
+    case MODE_TRANSLATE_SHAPE:
       break;
     default:
       mouseUpChild(cameraCoordLoc, mode);
