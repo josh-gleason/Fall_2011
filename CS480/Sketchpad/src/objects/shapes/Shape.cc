@@ -117,6 +117,9 @@ void Shape::draw() const
   // don't draw something that is scaled too small
   if ( fabs(m_params.scale.x) < 0.000011 && fabs(m_params.scale.y) < 0.000011 )
     return;
+  if ( m_vertex_count <= 0
+    || ( m_shader.drawMode != GL_POINTS && m_vertex_count <= 1 ) )
+    return;
 
   ASSERT(m_shader.initialized, "void Shape::init(GLuint program) must" 
          " be called before void Shape::draw()");
@@ -292,7 +295,12 @@ bool Shape::getFilled() const
 {
   return m_params.filled;
 }
-    
+
+int Shape::getVertexCount() const
+{
+  return m_vertex_count;
+}
+
 mat2 Shape::getBoundingBox() const
 {
   ASSERT(m_shader.initialized && m_vertex_count > 0,"");

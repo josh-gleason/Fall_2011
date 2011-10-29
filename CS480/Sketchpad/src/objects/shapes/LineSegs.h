@@ -3,6 +3,9 @@
 
 #include "Shape.h"
 
+// class prototype so we can be friends
+class Poly;
+
 class LineSegs : public Shape
 {
   public:
@@ -27,6 +30,8 @@ class LineSegs : public Shape
     // void unFillShape();
 
     bool isInside(vec2 loc) const;
+
+    friend class Poly;
   protected:
 
     void mouseDownChild(vec2 cameraCoordLoc, int mode);

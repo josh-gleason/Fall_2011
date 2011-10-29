@@ -105,6 +105,7 @@ class Shape
     const vec4& getColor() const;
     GLfloat getThickness() const;
     bool getFilled() const;
+    int getVertexCount() const;
 
     GLenum getDrawMode() const;
 

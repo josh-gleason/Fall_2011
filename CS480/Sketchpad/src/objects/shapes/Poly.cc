@@ -38,12 +38,40 @@ Poly::Poly(const vec2* vertices, int vertex_count, bool filled,
     fillShape();
   else
     unFillShape();
+      
+  mat2 bbox = getBoundingBox();
+  m_params.center = vec2( (bbox[0][0]+bbox[0][1])/2.0,
+                          (bbox[0][0]+bbox[0][1])/2.0 );
 }
 
-Poly::Poly(const vec2& startPoint, bool filled, const vec4& color,
-  GLfloat thickness)
+Poly::Poly(const LineSegs& rhs)
 {
-  // TODO
+  m_params = rhs.m_params;
+  m_shader = rhs.m_shader;
+
+  // build m_vertices_outline
+  m_vertex_count_outline = rhs.m_vertex_count;
+  m_vertices_outline = new vec4[m_vertex_count_outline];
+
+  for ( unsigned i = 0; i < m_vertex_count_outline; ++i )
+    m_vertices_outline[i] =
+      vec4(rhs.m_vertices[i].x, rhs.m_vertices[i].y, 0.0, 1.0);
+
+  // builds m_vertices_filled and sets m_vertex_count_filled
+  tessellate(m_vertices_outline, m_vertex_count_outline,
+             &m_vertices_filled, m_vertex_count_filled);
+
+  // sets m_vertices to either m_vertices_outline or m_vertices_filled
+  if ( m_params.filled )
+    fillShape();
+  else
+    unFillShape();
+  
+  if ( m_shader.initialized )
+  {
+    m_shader.initialized = false;
+    init(m_shader.program);
+  }
 }
 
 Poly::Poly(const Poly& rhs)

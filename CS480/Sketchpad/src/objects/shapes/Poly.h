@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Shape.h"
+#include "LineSegs.h"
 
 class Poly : public Shape
 {
@@ -15,10 +16,7 @@ class Poly : public Shape
             GLfloat thickness=1.0);
 
     Poly(const Poly& rhs);
-    Poly(const vec2& startPoint,
-         bool filled=true,
-         const vec4& color=vec4(0.0,0.0,0.0,1.0),
-         GLfloat thickness=1.0);
+    Poly(const LineSegs& rhs);
 
     ~Poly();
     const Poly& operator=(const Poly& rhs);

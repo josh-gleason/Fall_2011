@@ -180,9 +180,19 @@ void mouseDown(vec2 coords)
   {
     case MODE_DRAW_RECT:
       drawingShape = ShapePtr(
-// TODO        new Rect(coords, params.filled, params.color, params.thickness));
-        new Rect(coords, false, params.color, params.thickness));
+        new Rect(coords, params.filled, params.color, params.thickness));
       drawingShape->init(program);
+      drawingShape->mouseDown(coords, programMode);
+      break;
+    case MODE_DRAW_LINE_SEG:
+    case MODE_DRAW_POLY:
+      if ( !drawingShape )
+      {
+        cout << "Building shape" << endl;
+        drawingShape = ShapePtr(
+          new LineSegs(coords, params.color, params.thickness));
+        drawingShape->init(program);
+      }
       drawingShape->mouseDown(coords, programMode);
       break;
     case MODE_SELECT:
@@ -234,7 +244,8 @@ void mouseDown(vec2 coords)
         }
 
       } while ( index != start );
-
+      if ( index == start && !shapes[index]->isInside(coords) )
+        selectedIndex = -1;
   }
 }
 
@@ -243,6 +254,8 @@ void mouseMove(vec2 coords)
   switch (programMode)
   {
     case MODE_DRAW_RECT:
+    case MODE_DRAW_LINE_SEG:
+    case MODE_DRAW_POLY:
       drawingShape->mouseMove(coords, programMode);
       break;
   }
@@ -264,7 +277,9 @@ void mouseUp(vec2 coords)
 
 void mouseMotion(int x, int y)
 {
-  if ( mousePressed )
+  if ( mousePressed || ( drawingShape && (
+       programMode == MODE_DRAW_LINE_SEG ||
+       programMode == MODE_DRAW_POLY ) ) )
   {
     vec2 coords = mouse2Camera(x,y);
     mouseMove(coords);
@@ -281,20 +296,24 @@ void mousePress(int button, int state, int x, int y)
   else if ( button == GLUT_LEFT_BUTTON && state == GLUT_UP )
     mouseUp(coords);
 
-  // TODO: temp ////////////////////////////////////////////////////////////
-  if ( button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN )
-    shapes.back()->toggleFilled();
-
-  if ( button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN )
+  if ( button == GLUT_RIGHT_BUTTON && drawingShape )
   {
-    if ( shapes.back()->isInside(coords) )
-      std::cout << "Inside" << std::endl;
-    else
-      std::cout << "Outside" << std::endl;
+    if ( programMode == MODE_DRAW_LINE_SEG )
+    {
+      shapes.push_back(drawingShape);
+      drawingShape = ShapePtr();
+      glutPostRedisplay();
+    }
+    else if ( programMode == MODE_DRAW_POLY )
+    {
+      // convert the LineSeg into a Poly
+      ShapePtr p =
+        ShapePtr(new Poly(*reinterpret_cast<LineSegs*>(&(*drawingShape))));
+      shapes.push_back(p);
+      drawingShape = ShapePtr();
+      glutPostRedisplay();
+    }
   }
-  //////////////////////////////////////////////////////////////////////////
-  
-  glutPostRedisplay();
 }
 
 
@@ -321,7 +340,6 @@ void keyboardPress(unsigned char key, int x, int y)
         clearSelection();
         programMode = MODE_DRAW_LINE_SEG;
         break;
-      
       case 's': // select mode
         clearSelection();
         programMode = MODE_SELECT;
@@ -340,6 +358,7 @@ void keyboardPress(unsigned char key, int x, int y)
         if ( !mousePressed )
         {
           clearSelection();
+          drawingShape = ShapePtr();
           programMode = MODE_NONE;
           cout << "Reset Program Mode" << endl;
         }
@@ -396,8 +415,8 @@ int main(int argc, char *argv[])
   glutSpecialFunc(specialPress);
 
   //glutKeyboardUpFunc(keyboardUp);
-  //glutPassiveMotionFunc(mousePassiveMotion); 
   glutMouseFunc(mousePress);
+  glutPassiveMotionFunc(mouseMotion); 
   glutMotionFunc(mouseMotion);
 
   glutMainLoop();
