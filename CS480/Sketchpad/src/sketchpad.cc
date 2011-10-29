@@ -362,8 +362,6 @@ void keyboardPress(unsigned char key, int x, int y)
           programMode = MODE_NONE;
           cout << "Reset Program Mode" << endl;
         }
-        else
-          cout << "Mouse pressed?" << endl;
         break;
     }
   }
