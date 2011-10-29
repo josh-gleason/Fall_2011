@@ -23,9 +23,8 @@ Rect::Rect(const vec2& startPoint, bool filled, const vec4& color,
   GLfloat thickness) :
   Shape::Shape(),
   m_upperLeft(startPoint),
-  m_lowerRight(startPoint+vec2(1.0,-1.0))
+  m_lowerRight(startPoint)
 {
-  // so that scaling takes place from start point
   m_params.center = m_upperLeft;
 
   m_params.color = color;
@@ -33,9 +32,6 @@ Rect::Rect(const vec2& startPoint, bool filled, const vec4& color,
 
   if ( filled ) fillShape();
   else          unFillShape();
-
-  // make the object as small as possible
-  scale(0.0,0.0);
 }
 
 Rect::Rect(const Rect& rhs) :
@@ -61,11 +57,13 @@ vec2 Rect::getSize() const
 
 void Rect::fillShape()
 {
-  // delete a shader if it exists as well as the vertices
-  resetShape(false);
-  
-  m_vertex_count = 4;
-  m_vertices = new vec4[m_vertex_count];
+  if ( m_vertices == NULL || m_vertex_count != 4 )
+  {
+    if ( m_vertices != NULL )
+      delete [] m_vertices;
+    m_vertex_count = 4;
+    m_vertices = new vec4[m_vertex_count];
+  }
 
   m_vertices[0] = vec4(m_upperLeft.x, m_upperLeft.y, 0.0, 1.0);
   m_vertices[1] = vec4(m_lowerRight.x, m_upperLeft.y, 0.0, 1.0);
@@ -79,6 +77,14 @@ void Rect::fillShape()
   // if it was initialized, initialize it again
   if ( m_shader.initialized )
   {
+    // unbind current vertex array and buffer
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
+    
+    // remove buffer and vertex array
+    glDeleteBuffers(1,&m_shader.vbo);
+    glDeleteVertexArrays(1,&m_shader.vao);
+    
     m_shader.initialized = false;
     init(m_shader.program);
   }
@@ -87,10 +93,13 @@ void Rect::fillShape()
 void Rect::unFillShape()
 {
   // delete a shader if it exists as well as the vertices
-  resetShape(false);
-  
-  m_vertex_count = 4;
-  m_vertices = new vec4[m_vertex_count];
+  if ( m_vertices == NULL || m_vertex_count != 4 )
+  {
+    if ( m_vertices != NULL )
+      delete [] m_vertices;
+    m_vertex_count = 4;
+    m_vertices = new vec4[m_vertex_count];
+  }
 
   m_vertices[0] = vec4(m_upperLeft.x, m_upperLeft.y, 0.0, 1.0);
   m_vertices[1] = vec4(m_lowerRight.x, m_upperLeft.y, 0.0, 1.0);
@@ -104,6 +113,14 @@ void Rect::unFillShape()
   // if it was initialized, initialize it again
   if ( m_shader.initialized )
   {
+    // unbind current vertex array and buffer
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
+    
+    // remove buffer and vertex array
+    glDeleteBuffers(1,&m_shader.vbo);
+    glDeleteVertexArrays(1,&m_shader.vao);
+    
     m_shader.initialized = false;
     init(m_shader.program);
   }
@@ -122,8 +139,12 @@ void Rect::mouseMoveChild(vec2 cameraCoordLoc, int mode)
   switch (mode)
   {
     case MODE_DRAW_RECT:
-      setScale(vec2(cameraCoordLoc.x - m_upperLeft.x,
-                    m_upperLeft.y - cameraCoordLoc.y));
+      m_lowerRight = cameraCoordLoc;
+      m_params.center = 0.5*(m_upperLeft + m_lowerRight);
+      if ( m_params.filled )
+        fillShape();
+      else
+        unFillShape();
       break;
   }
 }
@@ -133,12 +154,6 @@ void Rect::mouseUpChild(vec2 cameraCoordLoc, int mode)
   switch (mode)
   {
     case MODE_DRAW_RECT:
-      // need to set the center to the actual center now
-      setScale(vec2(cameraCoordLoc.x - m_upperLeft.x,
-                    m_upperLeft.y - cameraCoordLoc.y));
-      m_params.center = (m_upperLeft+m_lowerRight)*0.5;
-      translate(vec2(m_params.center.x-m_upperLeft.x-1+m_params.scale.x*0.5,
-                     m_upperLeft.y-m_params.center.y-m_params.scale.y*0.5));
       break;
   }
 }

@@ -11,6 +11,7 @@
 #include "Rect.h"
 #include "Poly.h"
 #include "LineSegs.h"
+#include "Point.h"
 
 #include "InitShader.h"
 #include "SketchPadDefs.h"
@@ -33,6 +34,8 @@ ShapePtr drawingShape;
 // used when drawing shapes, some parameters may not apply to all objects
 ShapeParameters params;
 
+// used for translate rotate and scale
+vec3 point1(0.0,0.0,-1.0), point2(0.0,0.0,-1.0), point3(0.0,0.0,-1.0);
 
 // the current mode of the program
 int programMode = MODE_NONE;
@@ -59,40 +62,8 @@ void init()
   program = InitShader(VSHADER_NAME, FSHADER_NAME);
   projection = glGetUniformLocation(program,"projection");
 
-// TODO temp ///////////////////////////////////////////////////////////////
-  
-  // generate random polygon
-  /*const int VERT_NUMBER = 100;
-  vec2 pts[VERT_NUMBER+1];
-
-  for( int i = 0; i < VERT_NUMBER; ++i )
-    pts[i] = vec2((rand()%501)/500.0*1.5-0.75,
-                  (rand()%501)/500.0*1.5-0.75);
-  pts[VERT_NUMBER]=pts[0];
-  */
-  ShapePtr p;
-  /*p = ShapePtr(new Poly(pts,VERT_NUMBER,false,vec4(0.2,0.2,0.8,1.0)));
-  shapes.push_back(p);
-  shapes.back()->init(program);
-  
-  shapes.back()->scale(2);
-  shapes.back()->rotate(60);
-  
-  p = ShapePtr(new LineSegs(pts,VERT_NUMBER+1,vec4(0.8,0.2,0.2,1.0),10.0));
-  shapes.push_back(p);
-  shapes.back()->init(program);
-  
-  shapes.back()->scale(2);
-  shapes.back()->rotate(60);
-  */
-  p = ShapePtr(new Rect(vec2(-0.5,0.5),vec2(0.5,-0.5),false,vec4(0.0,0.0,0.0,1.0),1.0));
-  shapes.push_back(p);
-  shapes.back()->init(program);
-
-  shapes.back()->unFillShape();
-  shapes.back()->setThickness(2.0);
-  shapes.back()->setColor(vec4(1.0,1.0,0.0,1.0));
-////////////////////////////////////////////////////////////////////////////
+  params.thickness = 3.0;
+  params.color = vec4(0.0,0.0,0.0,1.0);
 
   glClearColor(0.5,0.5,0.5,1.0);
 }
@@ -107,12 +78,12 @@ void display()
   int index = 0;
   for ( vector<ShapePtr>::iterator i = shapes.begin(); i != shapes.end(); ++i )
   {
-    if ( selectedIndex == index && selectedIndex >= 0 )
+    if ( selectedIndex == index )
       selectedShape->draw();
     (*i)->draw();
     index++;
   }
-    
+ 
   if ( drawingShape )
     drawingShape->draw();
 
@@ -172,6 +143,99 @@ vec2 mouse2Camera(int x, int y)
               static_cast<GLfloat>(-objY));
 }
 
+void selectObject(vec2 coords)
+{
+  unsigned start = 0;
+  if ( selectedIndex >= 0 )
+    start = selectedIndex;
+  
+  unsigned index = start;
+  do {
+    if ( index == 0 )
+      index = shapes.size();
+    index--;
+    if ( shapes[index]->isInside(coords) )
+    {
+      if ( selectedIndex != index )
+      {
+        selectedIndex = index;
+
+
+        ///////////////////// Add new types here for selection /////////////
+        if      ( typeid(*shapes[index]) == typeid(Rect) )
+        {
+          cout << "Selected" << endl;
+          selectedShape = ShapePtr(new
+            Rect(*(reinterpret_cast<Rect*>(&(*shapes[index])))));
+        }
+        else if ( typeid(*shapes[index]) == typeid(Poly) )
+          selectedShape = ShapePtr(new
+            Poly(*(reinterpret_cast<Poly*>(&(*shapes[index])))));
+        else if ( typeid(*shapes[index]) == typeid(LineSegs) )
+          selectedShape = ShapePtr(new
+            LineSegs(*(reinterpret_cast<LineSegs*>(&(*shapes[index])))));
+        else if ( typeid(*shapes[index]) == typeid(Point) )
+        {
+          vec2 uL, lR;
+          uL = vec2(shapes[index]->getVertices()[0].x,
+                    shapes[index]->getVertices()[0].y) +
+               vec2(-0.01,0.01);
+          lR = vec2(shapes[index]->getVertices()[0].x,
+                    shapes[index]->getVertices()[0].y) +
+               vec2(0.01,-0.01);
+
+          selectedShape = ShapePtr(new Rect(uL,lR,true));
+          selectedShape->init(program);
+        }
+        ////////////////////////////////////////////////////////////////////
+
+        if ( selectedIndex >= 0 )
+          shapes[selectedIndex]->unSelectShape();
+        shapes[index]->selectShape();
+
+        if ( typeid(*shapes[index]) != typeid(Point) )
+        {
+          selectedShape->unFillShape();
+          if ( shapes[selectedIndex]->getFilled() )
+            selectedShape->setThickness(20.0);
+          else
+            selectedShape->setThickness(
+              shapes[selectedIndex]->getThickness()+19.0);
+        }
+
+        selectedShape->setColor(colorInv(shapes[index]->getColor()));
+        glutPostRedisplay();
+
+      }
+      break;
+    }
+
+  } while ( index != start );
+  if ( index == start && !shapes[index]->isInside(coords) )
+    selectedIndex = -1;
+}
+
+float getAngle(vec2 center, vec2 pt1, vec2 pt2)
+{
+  // uses the law of cosines
+  float lenC1, len12, lenC2;
+  lenC1 = sqrt((center.x-pt1.x)*(center.x-pt1.x)+
+               (center.y-pt1.y)*(center.y-pt1.y));
+  len12 = sqrt((pt1.x-pt2.x)*(pt1.x-pt2.x)+
+               (pt1.y-pt2.y)*(pt1.y-pt2.y));
+  lenC2 = sqrt((center.x-pt2.x)*(center.x-pt2.x)+
+               (center.y-pt2.y)*(center.y-pt2.y));
+ 
+  float angle = ( std::acos((lenC1*lenC1-len12*len12+lenC2*lenC2) /
+                  (2.0*lenC1*lenC2)) * 180.0/M_PI );
+
+  // cross product to figure out clockwise or counter-clockwise
+  if ( cross(pt1-center,pt2-center).z > 0 ) 
+    return angle;
+  else
+    return -angle;
+}
+
 void mouseDown(vec2 coords)
 {
   mousePressed = true;
@@ -180,7 +244,7 @@ void mouseDown(vec2 coords)
   {
     case MODE_DRAW_RECT:
       drawingShape = ShapePtr(
-        new Rect(coords, params.filled, params.color, params.thickness));
+          new Rect(coords, params.filled, params.color, params.thickness));
       drawingShape->init(program);
       drawingShape->mouseDown(coords, programMode);
       break;
@@ -190,63 +254,55 @@ void mouseDown(vec2 coords)
       {
         cout << "Building shape" << endl;
         drawingShape = ShapePtr(
-          new LineSegs(coords, params.color, params.thickness));
+            new LineSegs(coords, params.color, params.thickness));
         drawingShape->init(program);
       }
       drawingShape->mouseDown(coords, programMode);
       break;
+    case MODE_DRAW_POINT:
+    {
+      ShapePtr p = ShapePtr(new Point(coords, params.color, params.thickness));
+      shapes.push_back(p);
+      shapes.back()->init(program);
+      break;
+    }
     case MODE_SELECT:
-      unsigned start = 0;
-      if ( selectedIndex >= 0 )
-        start = selectedIndex;
-      
-      unsigned index = start;
-      do {
-        if ( index == 0 )
-          index = shapes.size();
-        index--;
-        if ( shapes[index]->isInside(coords) )
-        {
-          if ( selectedIndex != index )
-          {
-            selectedIndex = index;
-            if      ( typeid(*shapes[index]) == typeid(Rect) )
-            {
-              cout << "Selected" << endl;
-              selectedShape = ShapePtr(new
-                Rect(*(reinterpret_cast<Rect*>(&(*shapes[index])))));
-            }
-            else if ( typeid(*shapes[index]) == typeid(Poly) )
-              selectedShape = ShapePtr(new
-                Poly(*(reinterpret_cast<Poly*>(&(*shapes[index])))));
-            else if ( typeid(*shapes[index]) == typeid(LineSegs) )
-              selectedShape = ShapePtr(new
-                LineSegs(*(reinterpret_cast<LineSegs*>(&(*shapes[index])))));
-            
-            if ( selectedIndex >= 0 )
-              shapes[selectedIndex]->unSelectShape();
-            shapes[index]->selectShape();
-
-            selectedShape->unFillShape();
-            if ( shapes[selectedIndex]->getFilled() )
-              selectedShape->setThickness(20.0);
-            else
-              selectedShape->setThickness(
-                shapes[selectedIndex]->getThickness()+19.0);
-            selectedShape->setColor(colorInv(shapes[index]->getColor()));
-            glutPostRedisplay();
-
-            cout << selectedShape->getThickness() << endl;
-          
-          }
-          cout << selectedIndex << endl;
-          break;
-        }
-
-      } while ( index != start );
-      if ( index == start && !shapes[index]->isInside(coords) )
-        selectedIndex = -1;
+      selectObject(coords);
+      break;
   }
+
+  // must be a shape selected for these to work
+  if ( selectedIndex >= 0 )
+  {
+    switch (programMode)
+    {
+      case MODE_TRANSLATE_SHAPE:
+      {
+        vec2 trans = shapes[selectedIndex]->getTranslation();
+        point3 = vec3(trans.x,trans.y,0.0);
+        point1 = vec3(coords.x,coords.y,0.0);
+        break;
+      }
+      case MODE_ROTATE_SHAPE:
+      {
+        GLfloat theta = shapes[selectedIndex]->getTheta();
+        vec2 center = shapes[selectedIndex]->getCenter();
+        point3 = vec3(center.x,center.y,theta);
+        point1 = vec3(coords.x,coords.y,0.0);
+        break;
+      }
+      case MODE_SCALE_SHAPE:
+      {
+        vec2 scale = shapes[selectedIndex]->getScale();
+        vec2 center = shapes[selectedIndex]->getCenter();
+        point3 = vec3(center.x,center.y,0.0);
+        point2 = vec3(scale.x,scale.y,0.0);
+        point1 = vec3(coords.x,coords.y,0.0);
+        break;
+      }
+    }
+  }
+
 }
 
 void mouseMove(vec2 coords)
@@ -256,8 +312,54 @@ void mouseMove(vec2 coords)
     case MODE_DRAW_RECT:
     case MODE_DRAW_LINE_SEG:
     case MODE_DRAW_POLY:
+      if ( !drawingShape )
+        return;
       drawingShape->mouseMove(coords, programMode);
       break;
+  }
+
+  if ( selectedIndex >= 0 )
+  {
+    switch (programMode)
+    {
+      case MODE_TRANSLATE_SHAPE:
+      {
+        point2 = vec3(coords.x,coords.y,0.0);
+        vec3 newTrans = point3+point2-point1;
+        shapes[selectedIndex]->setTranslate(vec2(newTrans.x,newTrans.y));
+        selectedShape->setTranslate(vec2(newTrans.x,newTrans.y));
+        break;
+      }
+      case MODE_ROTATE_SHAPE:
+      {
+        point2 = vec3(coords.x,coords.y,0.0);
+        GLfloat newTheta = point3.z+getAngle(
+            vec2(point3.x,point3.y),
+            vec2(point1.x,point1.y),
+            vec2(point2.x,point2.y));
+        shapes[selectedIndex]->setTheta(newTheta);
+        selectedShape->setTheta(newTheta);
+        break;
+      }
+      case MODE_SCALE_SHAPE:
+      {
+        // point1 is the original clicked point
+        // point2 is the original scale
+        // point3 is the center of the object
+
+        vec2 firstVec = vec2(point1.x,point1.y)-vec2(point3.x,point3.y);
+        vec2 secondVec = coords-vec2(point1.x,point1.y);
+
+        vec2 scale;
+        
+        scale.x = (secondVec.x / firstVec.x)*point2.x;
+        scale.y = (secondVec.y / firstVec.y)*point2.y;
+
+        shapes[selectedIndex]->setScale(scale+vec2(point2.x,point2.y));
+        selectedShape->setScale(scale+vec2(point2.x,point2.y));
+        break;
+      }
+    }
   }
 }
 
@@ -268,6 +370,8 @@ void mouseUp(vec2 coords)
   switch (programMode)
   {
     case MODE_DRAW_RECT:
+      if ( !drawingShape )
+        return;
       drawingShape->mouseUp(coords, programMode);
       shapes.push_back(drawingShape);
       drawingShape = ShapePtr();
@@ -292,9 +396,15 @@ void mousePress(int button, int state, int x, int y)
   vec2 coords = mouse2Camera(x,y);
 
   if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN )
+  {
     mouseDown(coords);
+    glutPostRedisplay();
+  }
   else if ( button == GLUT_LEFT_BUTTON && state == GLUT_UP )
+  {
     mouseUp(coords);
+    glutPostRedisplay();
+  }
 
   if ( button == GLUT_RIGHT_BUTTON && drawingShape )
   {
@@ -319,50 +429,95 @@ void mousePress(int button, int state, int x, int y)
 
 void keyboardPress(unsigned char key, int x, int y)
 {
-  if ( programMode == MODE_NONE )
+  // keyboard disabled when mouse is pressed
+  if ( mousePressed ) return;
+
+  if ( !drawingShape  )
   {
     switch (key)
     {
       // change of mode cases
       case 'r': // draw rectangle
+        if ( programMode == MODE_DRAW_RECT )
+          return;
         clearSelection();
         programMode = MODE_DRAW_RECT;
         break;
       case 'p': // draw polygon
+        if ( programMode == MODE_DRAW_POLY )
+          return;
         clearSelection();
         programMode = MODE_DRAW_POLY;
         break;
       case 'c': // draw circle
+        if ( programMode == MODE_DRAW_CIRCLE )
+          return;
         clearSelection();
         programMode = MODE_DRAW_CIRCLE;
         break;
       case 'g': // draw line segment
+        if ( programMode == MODE_DRAW_LINE_SEG )
+          return;
         clearSelection();
         programMode = MODE_DRAW_LINE_SEG;
         break;
-      case 's': // select mode
+      case 'o': // draw points
+        if ( programMode == MODE_DRAW_POINT )
+          return;
         clearSelection();
-        programMode = MODE_SELECT;
+        programMode = MODE_DRAW_POINT;
         break;
-      case 'l': // color mode
-        if ( selectedIndex >= 0 )
-          programMode = MODE_CHANGE_COLOR;
+      case 's': // select mode
+        if ( programMode == MODE_SELECT )
+          return;
+        cout << "SELECT MODE" << endl;
+        programMode = MODE_SELECT;
         break;
     }
   }
-  else
+
+  switch (key)
+  {
+    case 27:  // esc key
+      if ( !mousePressed )
+      {
+        clearSelection();
+        drawingShape = ShapePtr();
+        programMode = MODE_NONE;
+        glutPostRedisplay();
+      }
+      break;
+  }
+
+  if ( selectedIndex >= 0 )
   {
     switch (key)
     {
-      case 27:  // Escape TODO
-        if ( !mousePressed )
-        {
-          clearSelection();
-          drawingShape = ShapePtr();
-          programMode = MODE_NONE;
-          cout << "Reset Program Mode" << endl;
-        }
+      case 't': // translate mode
+        programMode = MODE_TRANSLATE_SHAPE;
+        cout << "TRANSLATE MODE" << endl;
         break;
+      case 'y': // scale mode
+        programMode = MODE_SCALE_SHAPE;
+        cout << "SCALE MODE" << endl;
+        break;
+      case 'u': // rotate mode
+        programMode = MODE_ROTATE_SHAPE;
+        cout << "ROTATE MODE" << endl;
+        break;
+      case 'l': // color mode
+        programMode = MODE_CHANGE_COLOR;
+        break;
+      case 'm': // toggle filled
+        shapes[selectedIndex]->toggleFilled();
+        if ( shapes[selectedIndex]->getFilled() )
+          selectedShape->setThickness(20.0);
+        else
+          selectedShape->setThickness(
+            shapes[selectedIndex]->getThickness()+19.0);
+        glutPostRedisplay();
+        break;
+
     }
   }
 }

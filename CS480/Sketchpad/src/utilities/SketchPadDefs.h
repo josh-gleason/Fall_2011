@@ -6,11 +6,13 @@ const bool USE_DISTANCE_APPROX = true;
 
 // mouse constants
 const int MODE_NONE          = 0;
+
 const int MODE_DRAW_RECT     = 1;
 const int MODE_DRAW_LINE     = 2;
 const int MODE_DRAW_POLY     = 3;
 const int MODE_DRAW_LINE_SEG = 4;
 const int MODE_DRAW_CIRCLE   = 5;
+const int MODE_DRAW_POINT    = 6;
 
 // should be generic to all shapes (except point)
 const int MODE_SELECT          = 10;

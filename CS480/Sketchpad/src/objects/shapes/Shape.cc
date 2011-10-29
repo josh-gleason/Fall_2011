@@ -210,17 +210,6 @@ void Shape::scale(const vec2& scaling)
   setScale(m_params.scale*scaling);
 }
 
-// protected
-void Shape::setScale(const vec2& scaling)
-{
-  m_params.scale = scaling;
-/*
-  if ( fabs(m_params.scale.x) < 0.00001 )
-    m_params.scale.x = 0.00001;
-  if ( fabs(m_params.scale.y) < 0.00001 )
-    m_params.scale.y = 0.00001;*/
-}
-
 void Shape::setColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 {
   m_params.color = vec4(r,g,b,a);
@@ -249,6 +238,24 @@ void Shape::setFilled(bool filled)
 void Shape::toggleFilled()
 {
   setFilled(!m_params.filled);
+}
+
+void Shape::setTranslate(const vec2& translation)
+{
+  m_params.translate = translation;
+}
+
+void Shape::setTheta(GLfloat theta)
+{
+  m_params.theta = theta;
+  
+  while ( m_params.theta > 360.0 ) m_params.theta -= 360.0;
+  while ( m_params.theta <= 0.0  ) m_params.theta += 360.0;
+}
+
+void Shape::setScale(const vec2& scale)
+{
+  m_params.scale = scale;
 }
 
 GLfloat Shape::getTheta() const
@@ -301,6 +308,11 @@ int Shape::getVertexCount() const
   return m_vertex_count;
 }
 
+const vec4* Shape::getVertices() const
+{
+  return m_vertices;
+}
+
 mat2 Shape::getBoundingBox() const
 {
   ASSERT(m_shader.initialized && m_vertex_count > 0,"");
@@ -334,16 +346,16 @@ mat4 Shape::getModelView(bool inverse) const
   // compute model-view matrix, based computing the follow transforms in order
   // trans(-center)->rotate(theta)->scale(scale)->trans(center+translate)
   GLfloat m11 = c*m_params.scale.x;
-  GLfloat m12 = -s*m_params.scale.x;
-  GLfloat m21 = s*m_params.scale.y;
+  GLfloat m12 = -s*m_params.scale.y;
+  GLfloat m21 = s*m_params.scale.x;
   GLfloat m22 = c*m_params.scale.y;
 
-  GLfloat m14 = m_params.center.x*(1.0-c*m_params.scale.x)+m_params.center.y
-      * m_params.scale.x*s+m_params.translate.x;
+  GLfloat m14 = -m_params.center.x*m_params.scale.x*c+m_params.center.y
+      * m_params.scale.y*s+m_params.center.x+m_params.translate.x;
 
-  GLfloat m24 = m_params.center.y*(1.0-c*m_params.scale.y)-m_params.center.x
-      * m_params.scale.y*s+m_params.translate.y;
-                      
+  GLfloat m24 = -m_params.center.y*m_params.scale.y*c-m_params.center.x
+      * m_params.scale.x*s+m_params.center.y+m_params.translate.y;
+
   if ( !inverse )
   {
     return mat4(m11, m12, 0.0, m14,

@@ -22,8 +22,8 @@ LineSegs::LineSegs(const vec2* vertices, int vertex_count, const vec4& color,
     m_vertices[i] = vec4(vertices[i].x,vertices[i].y,0.0,1.0);
 
   mat2 bbox = getBoundingBox();
-  m_params.center = vec2( (bbox[0][0]+bbox[0][1])/2.0,
-                          (bbox[0][0]+bbox[0][1])/2.0 );
+  m_params.center = vec2( (bbox[0][0]+bbox[1][0])/2.0,
+                          (bbox[0][1]+bbox[1][1])/2.0 );
 }
 
 LineSegs::LineSegs(const vec2& startPoint, const vec4& color,
@@ -108,8 +108,8 @@ void LineSegs::mouseDownChild(vec2 cameraCoordLoc, int mode)
       }
       
       mat2 bbox = getBoundingBox();
-      m_params.center = vec2( (bbox[0][0]+bbox[0][1])/2.0,
-                              (bbox[0][0]+bbox[0][1])/2.0 );
+      m_params.center = vec2( (bbox[0][0]+bbox[1][0])/2.0,
+                              (bbox[0][1]+bbox[1][1])/2.0 );
       break;
   }
 }
@@ -138,8 +138,8 @@ void LineSegs::mouseMoveChild(vec2 cameraCoordLoc, int mode)
       }
       
       mat2 bbox = getBoundingBox();
-      m_params.center = vec2( (bbox[0][0]+bbox[0][1])/2.0,
-                              (bbox[0][0]+bbox[0][1])/2.0 );
+      m_params.center = vec2( (bbox[0][0]+bbox[1][0])/2.0,
+                              (bbox[0][1]+bbox[1][1])/2.0 );
       break;
   }
 }

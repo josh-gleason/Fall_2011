@@ -69,3 +69,34 @@ bool pointNearLineSegment(const vec4 input[2], const vec2& coord, float thresh)
 
   return ( dist < thresh );
 }
+
+bool pointNearPoint(const vec2 coord1, const vec2 coord2, float thresh)
+{
+  float dist;
+  if ( !USE_DISTANCE_APPROX )
+  {
+    dist = sqrt((coord1.x-coord2.x)*(coord1.x-coord2.x) +
+                (coord1.y-coord2.y)*(coord1.y-coord2.y));
+  }
+  else
+  {
+    float x = fabs(coord1.x-coord2.x),
+          y = fabs(coord1.y-coord2.y),
+          max_p, min_p;
+    
+    if ( x > y )
+    {
+      max_p = x;
+      min_p = y;
+    }
+    else
+    {
+      max_p = y;
+      min_p = x;
+    }
+    
+    dist = 0.983398437*max_p+0.430664062*min_p-(max_p<16*min_p?0.0390625*max_p:0.0);
+  }
+
+  return ( dist < thresh );
+}

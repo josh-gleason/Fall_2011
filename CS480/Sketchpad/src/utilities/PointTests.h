@@ -8,4 +8,7 @@
 
   // checks if a point is within a certain distance of a line
   bool pointNearLineSegment(const vec4 input[2], const vec2& coord, float thresh);
+
+  // checks if a point is within a certain distance of another point
+  bool pointNearPoint(const vec2 coord1, const vec2 coord2, float thresh);
 #endif

@@ -254,6 +254,12 @@ inline vec3 cross(const vec3& a, const vec3& b )
       a.x * b.y - a.y * b.x );
 }
 
+// assumes z coord is 0 for a and b
+inline vec3 cross(const vec2& a, const vec2& b )
+{
+  return vec3( 0.0, 0.0, a.x * b.y - a.y * b.x );
+}
+
 /**
   * @brief A 4 dimensional vector.
   */

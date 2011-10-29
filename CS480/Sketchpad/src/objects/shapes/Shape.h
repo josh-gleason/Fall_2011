@@ -87,7 +87,7 @@ class Shape
    
     // modifiers (rotation/scaling always occur around the center)
     void rotate(GLfloat theta);
-    void translate(const vec2& translation);
+    void translate(const vec2& translation);  // adds this to the current translation
     void translate(GLfloat transX, GLfloat transY);
     void scale(const vec2& scale);
     void scale(GLfloat scaleX, GLfloat scaleY);
@@ -96,6 +96,10 @@ class Shape
     void setThickness(GLfloat);
     void setFilled(bool filled);
     void toggleFilled();
+    
+    void setTranslate(const vec2& translation); // sets to this exact translation
+    void setTheta(GLfloat theta);
+    void setScale(const vec2& scale);
 
     // accessors
     GLfloat getTheta() const;
@@ -106,6 +110,7 @@ class Shape
     GLfloat getThickness() const;
     bool getFilled() const;
     int getVertexCount() const;
+    const vec4* getVertices() const;
 
     GLenum getDrawMode() const;
 
@@ -150,7 +155,6 @@ class Shape
 
     // reset shape called by reset with defvalues=true
     void resetShape(bool defaultValues=true);
-    void setScale(const vec2& scaling);
 };
 
 #endif // _JDG_SHADE_CLASS_
