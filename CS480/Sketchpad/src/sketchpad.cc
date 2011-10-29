@@ -179,9 +179,11 @@ void selectObject(vec2 coords)
           vec2 uL, lR;
           uL = vec2(shapes[index]->getVertices()[0].x,
                     shapes[index]->getVertices()[0].y) +
+                    shapes[index]->getTranslation() +
                vec2(-0.01,0.01);
           lR = vec2(shapes[index]->getVertices()[0].x,
                     shapes[index]->getVertices()[0].y) +
+                    shapes[index]->getTranslation() +
                vec2(0.01,-0.01);
 
           selectedShape = ShapePtr(new Rect(uL,lR,true));
@@ -285,6 +287,8 @@ void mouseDown(vec2 coords)
       }
       case MODE_ROTATE_SHAPE:
       {
+        if ( typeid(*shapes[selectedIndex]) == typeid(Point) )
+          break;
         GLfloat theta = shapes[selectedIndex]->getTheta();
         vec2 center = shapes[selectedIndex]->getCenter();
         point3 = vec3(center.x,center.y,theta);
@@ -293,6 +297,8 @@ void mouseDown(vec2 coords)
       }
       case MODE_SCALE_SHAPE:
       {
+        if ( typeid(*shapes[selectedIndex]) == typeid(Point) )
+          break;
         vec2 scale = shapes[selectedIndex]->getScale();
         vec2 center = shapes[selectedIndex]->getCenter();
         point3 = vec3(center.x,center.y,0.0);
@@ -332,6 +338,8 @@ void mouseMove(vec2 coords)
       }
       case MODE_ROTATE_SHAPE:
       {
+        if ( typeid(*shapes[selectedIndex]) == typeid(Point) )
+          break;
         point2 = vec3(coords.x,coords.y,0.0);
         GLfloat newTheta = point3.z+getAngle(
             vec2(point3.x,point3.y),
@@ -343,6 +351,8 @@ void mouseMove(vec2 coords)
       }
       case MODE_SCALE_SHAPE:
       {
+        if ( typeid(*shapes[selectedIndex]) == typeid(Point) )
+          break;
         // point1 is the original clicked point
         // point2 is the original scale
         // point3 is the center of the object
