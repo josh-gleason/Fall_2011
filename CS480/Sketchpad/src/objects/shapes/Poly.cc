@@ -238,9 +238,12 @@ bool Poly::isInside(vec2 loc) const
   // get mouse location in model coordinates
   vec4 mouseLoc = modelViewInverse*vec4(loc.x,loc.y,0,1);
   vec2 mouseLoc2 = vec2(mouseLoc.x, mouseLoc.y);
+    
+  GLfloat scaledThresh =
+    (1.0/fabs(m_params.scale.x) + 1.0/fabs(m_params.scale.y)) * 0.5 * POINT_NEAR_LINE_THRESH;
 
-  if ( !( mouseLoc.x >= bbox[0][0] && mouseLoc.x <= bbox[1][0] 
-       && mouseLoc.y >= bbox[0][1] && mouseLoc.y <= bbox[1][1] ) )
+  if ( !( mouseLoc.x >= bbox[0][0]-scaledThresh && mouseLoc.x <= bbox[1][0]+scaledThresh 
+       && mouseLoc.y >= bbox[0][1]-scaledThresh && mouseLoc.y <= bbox[1][1]+scaledThresh ) )
     return false;
 
   if ( m_params.filled )  // triangles
@@ -251,8 +254,6 @@ bool Poly::isInside(vec2 loc) const
   }
   else    // lines
   {
-    GLfloat scaledThresh =
-      (m_params.scale.x + m_params.scale.y) * 0.5 * POINT_NEAR_LINE_THRESH;
     for ( unsigned i = 0; i < m_vertex_count_outline-1; i++ )
       if ( pointNearLineSegment(&(m_vertices_outline[i]), mouseLoc2,
                                   scaledThresh) )

@@ -33,10 +33,7 @@ bool Point::isInside(vec2 loc) const
   mat4 modelViewInverse = getModelView(true);
   vec4 mouseLoc = modelViewInverse*vec4(loc.x,loc.y,0.0,1.0);
     
-  GLfloat scaledThresh =
-    (m_params.scale.x + m_params.scale.y) * 0.5 * POINT_NEAR_LINE_THRESH;
-
   return pointNearPoint( vec2(m_vertices[0].x,m_vertices[0].y),
                          vec2(mouseLoc.x,mouseLoc.y),
-                         scaledThresh );
+                         0.5 * POINT_NEAR_LINE_THRESH );
 }

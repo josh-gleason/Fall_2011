@@ -4,7 +4,8 @@ default: all
 
 # files which are header ONLY
 HEADER_FILES = objects/generic/vec.h \
-							 objects/generic/mat.h
+							 objects/generic/mat.h \
+							 utilities/SketchPadDefs.h
 
 # names of files that need binaries compiled (assumes each has .h and .cc)
 OBJECT_NAMES = objects/shapes/Shape \

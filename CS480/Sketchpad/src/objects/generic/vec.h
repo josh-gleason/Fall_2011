@@ -104,6 +104,9 @@ struct vec2 {
 
   operator GLfloat* ()
   { return static_cast<GLfloat*>( &x ); }
+
+  bool operator==(const vec2& rhs) const
+  { return x==rhs.x && y==rhs.y; }
 };
 
 //
@@ -229,6 +232,9 @@ struct vec3 {
 
   operator GLfloat* ()
   { return static_cast<GLfloat*>( &x ); }
+  
+  bool operator==(const vec3& rhs) const
+  { return x==rhs.x && y==rhs.y && z==rhs.z; }
 };
 
 //
@@ -372,6 +378,9 @@ struct vec4 {
 
   operator GLfloat* ()
   { return static_cast<GLfloat*>( &x ); }
+  
+  bool operator==(const vec4& rhs) const
+  { return x==rhs.x && y==rhs.y && z==rhs.z && w==rhs.w; }
 };
 
 //

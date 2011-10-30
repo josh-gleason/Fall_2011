@@ -26,4 +26,26 @@ const int MODE_CHANGE_COLOR    = 15;
 // minimum distance line needs to be from mouse to be "inside" (selected)
 const float POINT_NEAR_LINE_THRESH = 0.02;
 
+const GLfloat MAX_THICKNESS        = 3.0;
+const GLfloat MIN_THICKNESS        = 1.0;
+const GLfloat THICKNESS_STEP       = 1.0;
+
+// white and black
+const vec4 COLOR_WHITE         = vec4(1.0,1.0,1.0,1.0);
+const vec4 COLOR_BLACK         = vec4(0.0,0.0,0.0,1.0);
+
+// primary colors
+const vec4 COLOR_RED           = vec4(1.0,0.0,0.0,1.0);
+const vec4 COLOR_GREEN         = vec4(0.0,1.0,0.0,1.0);
+const vec4 COLOR_BLUE          = vec4(0.0,0.0,1.0,1.0);
+const vec4 COLOR_CYAN          = vec4(0.0,1.0,1.0,1.0);
+const vec4 COLOR_MAGENTA       = vec4(1.0,0.0,1.0,1.0);
+const vec4 COLOR_YELLOW        = vec4(1.0,1.0,0.0,1.0);
+
+// non-primary colors
+const vec4 COLOR_ORANGE        = vec4(1.0,0.5,0.0,1.0);
+const vec4 COLOR_PURPLE        = vec4(0.5,0.0,0.5,1.0);
+const vec4 COLOR_VIOLET        = vec4(0.5,0.0,1.0,1.0);
+const vec4 COLOR_BROWN         = vec4(0.6,0.3,0.0,1.0);
+
 #endif // _JDG_SKETCHPAD_DEFS

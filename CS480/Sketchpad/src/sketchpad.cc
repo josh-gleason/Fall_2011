@@ -30,15 +30,13 @@ mat4 projectionMatrix;
 vector<ShapePtr> shapes;
 
 ShapePtr drawingShape;
+ShapePtr copyShape;
 
 // used when drawing shapes, some parameters may not apply to all objects
 ShapeParameters params;
 
-// used for translate rotate and scale
+// used for translate rotate and scale 3rd dim used to store extra info
 vec3 point1(0.0,0.0,-1.0), point2(0.0,0.0,-1.0), point3(0.0,0.0,-1.0);
-
-vec2 A, B, C;
-mat2 Rot_J, Scale_J;
 
 // the current mode of the program
 int programMode = MODE_NONE;
@@ -53,6 +51,24 @@ GLuint projection;
 // tells the program if the mouse is being held down
 bool mousePressed = false;
 
+vec4 allColors[] = {
+  COLOR_WHITE,
+  COLOR_BLACK,
+  COLOR_RED,
+  COLOR_GREEN,
+  COLOR_BLUE,
+  COLOR_CYAN,
+  COLOR_MAGENTA,
+  COLOR_YELLOW,
+  COLOR_ORANGE,
+  COLOR_PURPLE,
+  COLOR_VIOLET,
+  COLOR_BROWN
+};
+
+vector<vec4> Colors(allColors,allColors+sizeof(allColors)/sizeof(vec4));
+vector<vec4>::iterator ColorIt = Colors.begin();
+
 // TODO: implement an unProject function to avoid deprecated glu function
 
 vec4 colorInv(vec4 input)
@@ -66,7 +82,7 @@ void init()
   projection = glGetUniformLocation(program,"projection");
 
   params.thickness = 3.0;
-  params.color = vec4(0.0,0.0,0.0,1.0);
+  params.color = *ColorIt; 
 
   glClearColor(0.5,0.5,0.5,1.0);
 }
@@ -148,6 +164,10 @@ vec2 mouse2Camera(int x, int y)
 
 void selectObject(vec2 coords)
 {
+  // can't select from an empty screen :P
+  if ( shapes.size() <= 0 )
+    return;
+
   unsigned start = 0;
   if ( selectedIndex >= 0 )
     start = selectedIndex;
@@ -162,7 +182,6 @@ void selectObject(vec2 coords)
       if ( selectedIndex != index )
       {
         selectedIndex = index;
-
 
         ///////////////////// Add new types here for selection /////////////
         if      ( typeid(*shapes[index]) == typeid(Rect) )
@@ -202,10 +221,10 @@ void selectObject(vec2 coords)
         {
           selectedShape->unFillShape();
           if ( shapes[selectedIndex]->getFilled() )
-            selectedShape->setThickness(20.0);
+            selectedShape->setThickness(5.0);
           else
             selectedShape->setThickness(
-              shapes[selectedIndex]->getThickness()+19.0);
+              shapes[selectedIndex]->getThickness()+2.0);
         }
 
         selectedShape->setColor(colorInv(shapes[index]->getColor()));
@@ -303,24 +322,15 @@ void mouseDown(vec2 coords)
         if ( typeid(*shapes[selectedIndex]) == typeid(Point) )
           break;
         GLfloat theta = -shapes[selectedIndex]->getTheta()*M_PI/180.0;
-        
         vec2 scale = shapes[selectedIndex]->getScale();
-
-        C = shapes[selectedIndex]->getCenter();
+        vec2 center = shapes[selectedIndex]->getCenter();
         
-        Rot_J = mat2(cos(theta),-sin(theta),
-                   sin(theta), cos(theta));
-
-        Scale_J = mat2(scale.x,0,
-                     0,      scale.y);
-
-        A = Rot_J*(coords-C);
-
-//        point3 = vec3(center.x,center.y,cos(theta));
-//        point2 = vec3(scale.x,scale.y,sin(theta));
-//        point1 = vec3(coords.x-center.x,coords.y-center.y,0.0);
-//        point1 = vec3(point1.x*point3.z-point1.y*point2.z,
-//                      point1.y*point2.z-point1.x*point3.z,theta);
+        point1 = vec3(center.x,center.y,cos(theta));
+        point2 = vec3(scale.x,scale.y,sin(theta));
+        point3 = vec3(coords.x-center.x,coords.y-center.y,0.0);
+        point3 = mat3(point1.z,-point2.z,0,
+                      point2.z,point1.z,0,
+                      0,0,1) * point3;
         break;
       }
     }
@@ -370,30 +380,16 @@ void mouseMove(vec2 coords)
       {
         if ( typeid(*shapes[selectedIndex]) == typeid(Point) )
           break;
-        // point1 is the original clicked point
-        // point2 is the original scale
-        // point3 is the center of the object
+        vec2 newScale = coords - vec2(point1.x,point1.y);
+        newScale = mat2(point1.z,-point2.z,
+                        point2.z,point1.z) * newScale;
+        newScale = newScale - vec2(point3.x,point3.y);
+        newScale.x /= point3.x;
+        newScale.y /= point3.y;
+        newScale = vec2(point2.x*(newScale.x+1.0),point2.y*(newScale.y+1.0));
 
-        //vec2 firstVec = vec2(point1.x,point1.y);
-        //vec2 secondVec = coords-vec2(point3.x,point3.y);
-       
-        B = Rot_J*(coords-C)-A;
-
-        //secondVec = vec2(secondVec.x*point3.z-secondVec.y*point2.z,
-        //                 secondVec.x*point2.z+secondVec.y*point3.z);
-
-        //secondVec = secondVec - firstVec;
-
-        vec2 scale;
-        
-        scale.x = (B.x / A.x);
-        scale.y = (B.y / A.y);
-
-        scale = vec2(Scale_J[0][0]*scale.x,Scale_J[1][1]*scale.y)
-                   + vec2(Scale_J[0][0],Scale_J[1][1]);
-
-        shapes[selectedIndex]->setScale(scale);
-        selectedShape->setScale(scale);
+        shapes[selectedIndex]->setScale(newScale);
+        selectedShape->setScale(newScale);
         break;
       }
     }
@@ -463,6 +459,64 @@ void mousePress(int button, int state, int x, int y)
   }
 }
 
+std::string colorName(vec4 color)
+{
+  if (color == COLOR_WHITE)
+    return "WHITE";
+  else if ( color == COLOR_BLACK )
+    return "BLACK";
+  else if ( color == COLOR_RED )
+    return "RED";
+  else if ( color == COLOR_GREEN )
+    return "GREEN";
+  else if ( color == COLOR_BLUE )
+    return "BLUE";
+  else if ( color == COLOR_CYAN )
+    return "CYAN";
+  else if ( color == COLOR_MAGENTA )
+    return "MAGENTA";
+  else if ( color == COLOR_YELLOW )
+    return "YELLOW";
+  else if ( color == COLOR_ORANGE )
+    return "ORANGE";
+  else if ( color == COLOR_PURPLE )
+    return "PURPLE";
+  else if ( color == COLOR_VIOLET )
+    return "VIOLET";
+  else if ( color == COLOR_BROWN )
+    return "BROWN";
+  else
+  {
+    ostringstream sout;
+    sout << "RGB(" << color.x << ", " << color.y << ", " << color.z << ")";
+    return sout.str();
+  }
+}
+
+vec4 nextColor()
+{
+  ColorIt++;
+  if ( ColorIt == Colors.end() )
+    ColorIt = Colors.begin();
+
+  return *ColorIt;
+}
+        
+void copyShapeIntoPointer(ShapePtr shape,ShapePtr& output)
+{
+  if      ( typeid(*shape) == typeid(Rect) )
+    output = ShapePtr(new
+      Rect(*(reinterpret_cast<Rect*>(&(*shape)))));
+  else if ( typeid(*shape) == typeid(Poly) )
+    output = ShapePtr(new
+      Poly(*(reinterpret_cast<Poly*>(&(*shape)))));
+  else if ( typeid(*shape) == typeid(LineSegs) )
+    output = ShapePtr(new
+      LineSegs(*(reinterpret_cast<LineSegs*>(&(*shape)))));
+  else if ( typeid(*shape) == typeid(Point) )
+    output = ShapePtr(new
+      Point(*(reinterpret_cast<Point*>(&(*shape)))));
+}
 
 void keyboardPress(unsigned char key, int x, int y)
 {
@@ -474,34 +528,39 @@ void keyboardPress(unsigned char key, int x, int y)
     switch (key)
     {
       // change of mode cases
-      case 'r': // draw rectangle
+      case 'q': // draw rectangle
         if ( programMode == MODE_DRAW_RECT )
           return;
         clearSelection();
+        cout << "DRAW RECTANGLES" << endl;
         programMode = MODE_DRAW_RECT;
         break;
-      case 'p': // draw polygon
+      case 'w': // draw polygon
         if ( programMode == MODE_DRAW_POLY )
           return;
         clearSelection();
+        cout << "DRAW POLYGONS" << endl;
         programMode = MODE_DRAW_POLY;
         break;
-      case 'c': // draw circle
+      case 'e': // draw circle
         if ( programMode == MODE_DRAW_CIRCLE )
           return;
         clearSelection();
+        cout << "DRAW CIRCLES" << endl;
         programMode = MODE_DRAW_CIRCLE;
         break;
-      case 'g': // draw line segment
+      case 'a': // draw line segment
         if ( programMode == MODE_DRAW_LINE_SEG )
           return;
         clearSelection();
+        cout << "DRAW CONNECTED LINE SEGMENTS" << endl;
         programMode = MODE_DRAW_LINE_SEG;
         break;
-      case 'o': // draw points
+      case 'd': // draw points
         if ( programMode == MODE_DRAW_POINT )
           return;
         clearSelection();
+        cout << "DRAW POINTS" << endl;
         programMode = MODE_DRAW_POINT;
         break;
       case 's': // select mode
@@ -510,6 +569,54 @@ void keyboardPress(unsigned char key, int x, int y)
         cout << "SELECT MODE" << endl;
         programMode = MODE_SELECT;
         break;
+      
+      case '1': // toggle filled
+        if ( selectedShape )
+          break;
+        params.filled = !params.filled;
+        if ( params.filled )
+          cout << "NOW DRAWING FILLED POLYGONS" << endl;
+        else
+          cout << "NOW DRAWING UNFILLED POLYGONS" << endl;
+        break;
+      case '2': // change color
+        if ( selectedShape )
+          break;
+        params.color = nextColor();
+        cout << "CHANGING COLOR TO " << colorName(*ColorIt) << endl;
+        break;
+      case '3': // increase thickness
+      {
+        if ( selectedShape )
+          break;
+        params.thickness += THICKNESS_STEP;
+        if ( params.thickness > MAX_THICKNESS )
+          params.thickness = MAX_THICKNESS;
+        cout << "INCREASING THICKNESS TO " << params.thickness << endl;
+        break;
+      }
+      case '4': // decrease thickness
+      {
+        if ( selectedShape )
+          break;
+        params.thickness -= THICKNESS_STEP;
+        if ( params.thickness < MIN_THICKNESS )
+          params.thickness = MIN_THICKNESS;
+        cout << "DECREASING THICKNESS TO " << params.thickness << endl;
+        break;
+      }
+
+      case 'v': // paste
+      {
+        if ( !copyShape )
+          break;
+        ShapePtr newShape;
+        copyShapeIntoPointer(copyShape,newShape);
+        shapes.push_back(newShape);
+        cout << "PASTED SHAPE" << endl;
+        glutPostRedisplay();
+        break;
+      }
     }
   }
 
@@ -530,6 +637,10 @@ void keyboardPress(unsigned char key, int x, int y)
   {
     switch (key)
     {
+      case 'r': // rotate mode
+        programMode = MODE_ROTATE_SHAPE;
+        cout << "ROTATE MODE" << endl;
+        break;
       case 't': // translate mode
         programMode = MODE_TRANSLATE_SHAPE;
         cout << "TRANSLATE MODE" << endl;
@@ -538,23 +649,77 @@ void keyboardPress(unsigned char key, int x, int y)
         programMode = MODE_SCALE_SHAPE;
         cout << "SCALE MODE" << endl;
         break;
-      case 'u': // rotate mode
-        programMode = MODE_ROTATE_SHAPE;
-        cout << "ROTATE MODE" << endl;
-        break;
-      case 'l': // color mode
-        programMode = MODE_CHANGE_COLOR;
-        break;
-      case 'm': // toggle filled
+      
+      case '1': // toggle filled
         shapes[selectedIndex]->toggleFilled();
         if ( shapes[selectedIndex]->getFilled() )
-          selectedShape->setThickness(20.0);
+          selectedShape->setThickness(5.0);
         else
           selectedShape->setThickness(
-            shapes[selectedIndex]->getThickness()+19.0);
+            shapes[selectedIndex]->getThickness()+2.0);
+        params.filled = !params.filled;
+        cout << "TOGGLING FILL PROPERTY" << endl;
         glutPostRedisplay();
         break;
+      case '2': // change color
+        shapes[selectedIndex]->setColor(nextColor());
+        cout << "CHANGING COLOR TO " << colorName(*ColorIt) << endl;
+        selectedShape->setColor(colorInv(*ColorIt));
+        params.color = *ColorIt;
+        glutPostRedisplay();
+        break;
+      case '3': // increase thickness
+      {
+        if ( shapes[selectedIndex]->getFilled() )
+          break;
 
+        GLfloat thickness = shapes[selectedIndex]->getThickness();
+        thickness += THICKNESS_STEP;
+        if ( thickness > MAX_THICKNESS )
+          thickness = MAX_THICKNESS;
+        shapes[selectedIndex]->setThickness(thickness);
+        selectedShape->setThickness(thickness+2.0);
+        params.thickness = thickness;
+
+        cout << "INCREASING THICKNESS TO " << thickness << endl;
+        glutPostRedisplay();
+        break;
+      }
+      case '4': // decrease thickness
+      {
+        if ( shapes[selectedIndex]->getFilled() )
+          break;
+
+        GLfloat thickness = shapes[selectedIndex]->getThickness();
+        thickness -= THICKNESS_STEP;
+        if ( thickness < MIN_THICKNESS )
+          thickness = MIN_THICKNESS;
+        shapes[selectedIndex]->setThickness(thickness);
+        selectedShape->setThickness(thickness+2.0);
+        params.thickness = thickness;
+
+        cout << "DECREASING THICKNESS TO " << thickness << endl;
+        glutPostRedisplay();
+        break;
+      }
+
+      case 'x': // cut
+      {
+        copyShapeIntoPointer(shapes[selectedIndex],copyShape);
+        vector<ShapePtr>::iterator it = shapes.begin();
+        for ( int i = 0; i < selectedIndex; ++i )
+          it++;
+        shapes.erase(it);
+        selectedIndex = -1;
+        selectedShape = ShapePtr();
+        cout << "CUT SHAPE" << endl;
+        glutPostRedisplay();
+        break;
+      }
+      case 'c': // copy
+        copyShapeIntoPointer(shapes[selectedIndex],copyShape);
+        cout << "COPY SHAPE" << endl;
+        break;
     }
   }
 }
@@ -583,9 +748,7 @@ void keyboardPress(unsigned char key, int x, int y)
 // GLUT_KEY_END    End function key
 // GLUT_KEY_INSERT   Insert function key
 void specialPress(int key, int x, int y)
-{
-
-}
+{}
 
 int main(int argc, char *argv[])
 {

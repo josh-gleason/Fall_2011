@@ -63,15 +63,15 @@ bool LineSegs::isInside(vec2 loc) const
   // get mouse location in model coordinates
   vec4 mouseTemp = modelViewInverse*vec4(loc.x,loc.y,0,1);
 
-  if ( !( mouseTemp.x >= bbox[0][0] && mouseTemp.x <= bbox[1][0] 
-       && mouseTemp.y >= bbox[0][1] && mouseTemp.y <= bbox[1][1] ) )
+  GLfloat scaledThresh =
+    (1.0/fabs(m_params.scale.x) + 1.0/fabs(m_params.scale.y)) * 0.5 * POINT_NEAR_LINE_THRESH;
+
+  if ( !( mouseTemp.x >= bbox[0][0]-scaledThresh && mouseTemp.x <= bbox[1][0]+scaledThresh 
+       && mouseTemp.y >= bbox[0][1]-scaledThresh && mouseTemp.y <= bbox[1][1]+scaledThresh ) )
     return false;
   
   vec2 mouseLoc = vec2(mouseTemp.x, mouseTemp.y);
 
-  GLfloat scaledThresh =
-    (1.0/m_params.scale.x + 1.0/m_params.scale.y) * 0.5 * POINT_NEAR_LINE_THRESH;
- 
   // test all line segments
   for ( unsigned i = 0; i < m_vertex_count-1; i++ )
     if ( pointNearLineSegment(&(m_vertices[i]), mouseLoc, scaledThresh) )
