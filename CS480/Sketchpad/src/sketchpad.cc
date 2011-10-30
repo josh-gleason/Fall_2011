@@ -37,6 +37,9 @@ ShapeParameters params;
 // used for translate rotate and scale
 vec3 point1(0.0,0.0,-1.0), point2(0.0,0.0,-1.0), point3(0.0,0.0,-1.0);
 
+vec2 A, B, C;
+mat2 Rot_J, Scale_J;
+
 // the current mode of the program
 int programMode = MODE_NONE;
 
@@ -299,11 +302,25 @@ void mouseDown(vec2 coords)
       {
         if ( typeid(*shapes[selectedIndex]) == typeid(Point) )
           break;
+        GLfloat theta = -shapes[selectedIndex]->getTheta()*M_PI/180.0;
+        
         vec2 scale = shapes[selectedIndex]->getScale();
-        vec2 center = shapes[selectedIndex]->getCenter();
-        point3 = vec3(center.x,center.y,0.0);
-        point2 = vec3(scale.x,scale.y,0.0);
-        point1 = vec3(coords.x,coords.y,0.0);
+
+        C = shapes[selectedIndex]->getCenter();
+        
+        Rot_J = mat2(cos(theta),-sin(theta),
+                   sin(theta), cos(theta));
+
+        Scale_J = mat2(scale.x,0,
+                     0,      scale.y);
+
+        A = Rot_J*(coords-C);
+
+//        point3 = vec3(center.x,center.y,cos(theta));
+//        point2 = vec3(scale.x,scale.y,sin(theta));
+//        point1 = vec3(coords.x-center.x,coords.y-center.y,0.0);
+//        point1 = vec3(point1.x*point3.z-point1.y*point2.z,
+//                      point1.y*point2.z-point1.x*point3.z,theta);
         break;
       }
     }
@@ -357,16 +374,26 @@ void mouseMove(vec2 coords)
         // point2 is the original scale
         // point3 is the center of the object
 
-        vec2 firstVec = vec2(point1.x,point1.y)-vec2(point3.x,point3.y);
-        vec2 secondVec = coords-vec2(point1.x,point1.y);
+        //vec2 firstVec = vec2(point1.x,point1.y);
+        //vec2 secondVec = coords-vec2(point3.x,point3.y);
+       
+        B = Rot_J*(coords-C)-A;
+
+        //secondVec = vec2(secondVec.x*point3.z-secondVec.y*point2.z,
+        //                 secondVec.x*point2.z+secondVec.y*point3.z);
+
+        //secondVec = secondVec - firstVec;
 
         vec2 scale;
         
-        scale.x = (secondVec.x / firstVec.x)*point2.x;
-        scale.y = (secondVec.y / firstVec.y)*point2.y;
+        scale.x = (B.x / A.x);
+        scale.y = (B.y / A.y);
 
-        shapes[selectedIndex]->setScale(scale+vec2(point2.x,point2.y));
-        selectedShape->setScale(scale+vec2(point2.x,point2.y));
+        scale = vec2(Scale_J[0][0]*scale.x,Scale_J[1][1]*scale.y)
+                   + vec2(Scale_J[0][0],Scale_J[1][1]);
+
+        shapes[selectedIndex]->setScale(scale);
+        selectedShape->setScale(scale);
         break;
       }
     }
