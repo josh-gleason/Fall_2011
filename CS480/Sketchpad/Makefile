@@ -12,6 +12,7 @@ OBJECT_NAMES = objects/shapes/Shape \
                objects/shapes/Rect \
                objects/shapes/Poly \
                objects/shapes/Point \
+               objects/shapes/Circle \
                objects/shapes/LineSegs \
 							 utilities/InitShader \
 							 utilities/Tessellate \

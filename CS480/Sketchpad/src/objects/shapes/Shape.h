@@ -1,6 +1,7 @@
 #ifndef _JDG_SHAPE_CLASS_
 #define _JDG_SHAPE_CLASS_
 
+#include <fstream>
 #include "mat.h"
 
 struct ShapeParameters
@@ -139,6 +140,9 @@ class Shape
 
     virtual void fillShape();
     virtual void unFillShape();
+
+    virtual void Save(std::ofstream &fout) const = 0;
+    virtual void Load(std::ifstream &fin, GLuint program) = 0;
   protected:
     // called by mouseDown and MouseMove and MouseUp
     virtual void mouseDownChild(vec2 cameraCoordLoc, int mode);

@@ -158,3 +158,45 @@ void Rect::mouseUpChild(vec2 cameraCoordLoc, int mode)
   }
 }
 
+void Rect::Save(std::ofstream &fout) const
+{
+  // don't save uninitialized shapes
+  if ( !m_shader.initialized )
+    return;
+
+  fout << "R" << std::endl;
+  fout << m_params.center.x << ' ' << m_params.center.y << std::endl;
+  fout << m_params.translate.x << ' ' << m_params.translate.y << std::endl;
+  fout << m_params.theta << std::endl;
+  fout << m_params.scale.x << ' ' << m_params.scale.y << std::endl;
+  fout << m_params.color.x << ' ' << m_params.color.y << ' ' 
+       << m_params.color.z << ' ' << m_params.color.w << std::endl;
+  fout << m_params.thickness << std::endl;
+  fout << m_params.filled << std::endl;
+
+  fout << m_upperLeft.x << ' ' << m_upperLeft.y << std::endl;
+  fout << m_lowerRight.x << ' ' << m_lowerRight.y << std::endl;
+}
+
+void Rect::Load(std::ifstream &fin, GLuint program)
+{
+  resetShape(true);
+
+  fin >> m_params.center.x >> m_params.center.y
+      >> m_params.translate.x >> m_params.translate.y
+      >> m_params.theta
+      >> m_params.scale.x >> m_params.scale.y
+      >> m_params.color.x >> m_params.color.y
+      >> m_params.color.z >> m_params.color.w
+      >> m_params.thickness
+      >> m_params.filled;
+
+  fin >> m_upperLeft.x >> m_upperLeft.y
+      >> m_lowerRight.x >> m_lowerRight.y;
+
+  if ( m_params.filled ) fillShape();
+  else                   unFillShape();
+
+  init(program);
+}
+

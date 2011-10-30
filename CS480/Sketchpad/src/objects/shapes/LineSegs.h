@@ -31,6 +31,9 @@ class LineSegs : public Shape
 
     bool isInside(vec2 loc) const;
 
+    void Save(std::ofstream &fout) const;
+    void Load(std::ifstream &fin,GLuint program);
+
     friend class Poly;
   protected:
 

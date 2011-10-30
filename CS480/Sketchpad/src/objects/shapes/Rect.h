@@ -24,6 +24,9 @@ class Rect : public Shape
     vec2 getSize() const;
     void fillShape();
     void unFillShape();
+
+    void Save(std::ofstream &fout) const;
+    void Load(std::ifstream &fin, GLuint program);
   protected:
     vec2 m_upperLeft, m_lowerRight;
   

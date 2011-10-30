@@ -11,6 +11,9 @@ public:
   Point(const Point& rhs);
 
   bool isInside(vec2 loc) const;
+
+  void Save(std::ofstream &fout) const;
+  void Load(std::ifstream &fin, GLuint program);
 };
 
 #endif // _JDG_POINT_CLASS_

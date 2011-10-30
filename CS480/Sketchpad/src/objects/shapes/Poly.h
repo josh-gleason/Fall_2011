@@ -25,6 +25,9 @@ class Poly : public Shape
     void unFillShape();
     
     bool isInside(vec2 loc) const;
+
+    void Save(std::ofstream &fout) const;
+    void Load(std::ifstream &fin, GLuint program);
   protected: 
     vec4* m_vertices_filled;
     vec4* m_vertices_outline;

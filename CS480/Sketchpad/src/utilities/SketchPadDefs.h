@@ -13,6 +13,7 @@ const int MODE_DRAW_POLY     = 3;
 const int MODE_DRAW_LINE_SEG = 4;
 const int MODE_DRAW_CIRCLE   = 5;
 const int MODE_DRAW_POINT    = 6;
+const int MODE_FREEFORM      = 7;
 
 // should be generic to all shapes (except point)
 const int MODE_SELECT          = 10;
@@ -20,8 +21,6 @@ const int MODE_SELECT          = 10;
 const int MODE_ROTATE_SHAPE    = 11;
 const int MODE_TRANSLATE_SHAPE = 12;
 const int MODE_SCALE_SHAPE     = 13;
-const int MODE_FILL_SHAPE      = 14;
-const int MODE_CHANGE_COLOR    = 15;
 
 // minimum distance line needs to be from mouse to be "inside" (selected)
 const float POINT_NEAR_LINE_THRESH = 0.02;
@@ -47,5 +46,12 @@ const vec4 COLOR_ORANGE        = vec4(1.0,0.5,0.0,1.0);
 const vec4 COLOR_PURPLE        = vec4(0.5,0.0,0.5,1.0);
 const vec4 COLOR_VIOLET        = vec4(0.5,0.0,1.0,1.0);
 const vec4 COLOR_BROWN         = vec4(0.6,0.3,0.0,1.0);
+
+const int MENU_NEW     = 0;
+const int MENU_SAVE    = 1;
+const int MENU_SAVE_AS = 2;
+const int MENU_OPEN    = 3;
+const int MENU_RELOAD  = 4;
+const int MENU_EXIT    = 5;
 
 #endif // _JDG_SKETCHPAD_DEFS

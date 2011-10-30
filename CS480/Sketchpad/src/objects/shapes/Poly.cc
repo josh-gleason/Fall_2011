@@ -269,17 +269,72 @@ bool Poly::isInside(vec2 loc) const
 }
 
 void Poly::mouseDownChild(vec2 cameraCoordLoc, int mode)
-{
-  // TODO  
-}
+{}
 
 void Poly::mouseMoveChild(vec2 cameraCorrdLoc, int mode)
-{
-  // TODO  
-}
+{}
 
 void Poly::mouseUpChild(vec2 cameraCorrdLoc, int mode)
+{}
+
+void Poly::Save(std::ofstream &fout) const
 {
-  // TODO  
+  // don't save uninitialized shapes
+  if ( !m_shader.initialized )
+    return;
+
+  fout << "P" << std::endl;
+  fout << m_params.center.x << ' ' << m_params.center.y << std::endl;
+  fout << m_params.translate.x << ' ' << m_params.translate.y << std::endl;
+  fout << m_params.theta << std::endl;
+  fout << m_params.scale.x << ' ' << m_params.scale.y << std::endl;
+  fout << m_params.color.x << ' ' << m_params.color.y << ' ' 
+       << m_params.color.z << ' ' << m_params.color.w << std::endl;
+  fout << m_params.thickness << std::endl;
+  fout << m_params.filled << std::endl;
+
+  fout << m_vertex_count_outline << std::endl;
+  for ( int i = 0; i < m_vertex_count_outline; ++i )
+    fout << m_vertices_outline[i].x << ' ' << m_vertices_outline[i].y << ' '
+         << m_vertices_outline[i].z << ' ' << m_vertices_outline[i].w << ' ';
+  fout << std::endl;
 }
 
+void Poly::Load(std::ifstream &fin, GLuint program)
+{
+  m_vertices = NULL;  // because it is pointing to another list
+  m_vertex_count = 0;
+  resetShape(true);
+  if ( m_vertices_filled != NULL )
+    delete [] m_vertices_filled;
+  if ( m_vertices_outline != NULL )
+    delete [] m_vertices_outline;
+  m_vertices_filled = NULL;
+  m_vertices_outline = NULL;
+  m_vertex_count_filled = 0;
+  m_vertex_count_outline = 0;
+
+  fin >> m_params.center.x >> m_params.center.y
+      >> m_params.translate.x >> m_params.translate.y
+      >> m_params.theta
+      >> m_params.scale.x >> m_params.scale.y
+      >> m_params.color.x >> m_params.color.y
+      >> m_params.color.z >> m_params.color.w
+      >> m_params.thickness
+      >> m_params.filled;
+ 
+  fin >> m_vertex_count_outline;
+  m_vertices_outline = new vec4[m_vertex_count_outline];
+  for ( int i = 0; i < m_vertex_count_outline; ++i )
+    fin >> m_vertices_outline[i].x >> m_vertices_outline[i].y
+        >> m_vertices_outline[i].z >> m_vertices_outline[i].w;
+  
+  // builds m_vertices_filled and sets m_vertex_count_filled
+  tessellate(m_vertices_outline, m_vertex_count_outline,
+             &m_vertices_filled, m_vertex_count_filled);
+
+  if ( m_params.filled ) fillShape();
+  else                   unFillShape();
+
+  init(program);
+}

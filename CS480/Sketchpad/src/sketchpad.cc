@@ -9,6 +9,7 @@
 #include "mat.h"
 
 #include "Rect.h"
+#include "Circle.h"
 #include "Poly.h"
 #include "LineSegs.h"
 #include "Point.h"
@@ -47,6 +48,9 @@ ShapePtr selectedShape;
 // global shader indecies
 GLuint program;
 GLuint projection;
+
+// filename of current file
+string filename = "";
 
 // tells the program if the mouse is being held down
 bool mousePressed = false;
@@ -185,11 +189,11 @@ void selectObject(vec2 coords)
 
         ///////////////////// Add new types here for selection /////////////
         if      ( typeid(*shapes[index]) == typeid(Rect) )
-        {
-          cout << "Selected" << endl;
           selectedShape = ShapePtr(new
             Rect(*(reinterpret_cast<Rect*>(&(*shapes[index])))));
-        }
+        else if ( typeid(*shapes[index]) == typeid(Circle) )
+          selectedShape = ShapePtr(new
+            Circle(*(reinterpret_cast<Circle*>(&(*shapes[index])))));
         else if ( typeid(*shapes[index]) == typeid(Poly) )
           selectedShape = ShapePtr(new
             Poly(*(reinterpret_cast<Poly*>(&(*shapes[index])))));
@@ -267,18 +271,33 @@ void mouseDown(vec2 coords)
   switch (programMode)
   {
     case MODE_DRAW_RECT:
+      glutDetachMenu(GLUT_RIGHT_BUTTON);
       drawingShape = ShapePtr(
           new Rect(coords, params.filled, params.color, params.thickness));
       drawingShape->init(program);
       drawingShape->mouseDown(coords, programMode);
       break;
+    case MODE_DRAW_CIRCLE:
+      glutDetachMenu(GLUT_RIGHT_BUTTON);
+      drawingShape = ShapePtr(
+          new Circle(coords, params.filled, params.color, params.thickness));
+      drawingShape->init(program);
+      drawingShape->mouseDown(coords, programMode);
+      break;
+    case MODE_FREEFORM:
+      glutDetachMenu(GLUT_RIGHT_BUTTON);
+      drawingShape = ShapePtr(
+          new LineSegs(coords, params.color, params.thickness));
+      drawingShape->init(program);
+      break;
     case MODE_DRAW_LINE_SEG:
     case MODE_DRAW_POLY:
       if ( !drawingShape )
       {
-        cout << "Building shape" << endl;
+        glutDetachMenu(GLUT_RIGHT_BUTTON);
         drawingShape = ShapePtr(
             new LineSegs(coords, params.color, params.thickness));
+        drawingShape->setFilled(params.filled);
         drawingShape->init(program);
       }
       drawingShape->mouseDown(coords, programMode);
@@ -343,11 +362,15 @@ void mouseMove(vec2 coords)
   switch (programMode)
   {
     case MODE_DRAW_RECT:
+    case MODE_DRAW_CIRCLE:
     case MODE_DRAW_LINE_SEG:
     case MODE_DRAW_POLY:
       if ( !drawingShape )
         return;
       drawingShape->mouseMove(coords, programMode);
+      break;
+    case MODE_FREEFORM:
+      drawingShape->mouseDown(coords, MODE_DRAW_LINE_SEG);
       break;
   }
 
@@ -403,11 +426,14 @@ void mouseUp(vec2 coords)
   switch (programMode)
   {
     case MODE_DRAW_RECT:
+    case MODE_DRAW_CIRCLE:
+    case MODE_FREEFORM:
       if ( !drawingShape )
         return;
       drawingShape->mouseUp(coords, programMode);
       shapes.push_back(drawingShape);
       drawingShape = ShapePtr();
+      glutAttachMenu(GLUT_RIGHT_BUTTON);
       break;
   }
 }
@@ -446,15 +472,20 @@ void mousePress(int button, int state, int x, int y)
       shapes.push_back(drawingShape);
       drawingShape = ShapePtr();
       glutPostRedisplay();
+      glutAttachMenu(GLUT_RIGHT_BUTTON);
     }
     else if ( programMode == MODE_DRAW_POLY )
     {
       // convert the LineSeg into a Poly
-      ShapePtr p =
-        ShapePtr(new Poly(*reinterpret_cast<LineSegs*>(&(*drawingShape))));
-      shapes.push_back(p);
+      if ( drawingShape->getVertexCount() > 2 )
+      {
+        ShapePtr p =
+          ShapePtr(new Poly(*reinterpret_cast<LineSegs*>(&(*drawingShape))));
+        shapes.push_back(p);
+      }
       drawingShape = ShapePtr();
       glutPostRedisplay();
+      glutAttachMenu(GLUT_RIGHT_BUTTON);
     }
   }
 }
@@ -507,6 +538,9 @@ void copyShapeIntoPointer(ShapePtr shape,ShapePtr& output)
   if      ( typeid(*shape) == typeid(Rect) )
     output = ShapePtr(new
       Rect(*(reinterpret_cast<Rect*>(&(*shape)))));
+  else if ( typeid(*shape) == typeid(Circle) )
+    output = ShapePtr(new
+      Circle(*(reinterpret_cast<Circle*>(&(*shape)))));
   else if ( typeid(*shape) == typeid(Poly) )
     output = ShapePtr(new
       Poly(*(reinterpret_cast<Poly*>(&(*shape)))));
@@ -530,39 +564,47 @@ void keyboardPress(unsigned char key, int x, int y)
       // change of mode cases
       case 'q': // draw rectangle
         if ( programMode == MODE_DRAW_RECT )
-          return;
+          break;
         clearSelection();
         cout << "DRAW RECTANGLES" << endl;
         programMode = MODE_DRAW_RECT;
         break;
       case 'w': // draw polygon
         if ( programMode == MODE_DRAW_POLY )
-          return;
+          break;
         clearSelection();
         cout << "DRAW POLYGONS" << endl;
         programMode = MODE_DRAW_POLY;
         break;
       case 'e': // draw circle
         if ( programMode == MODE_DRAW_CIRCLE )
-          return;
+          break;
         clearSelection();
         cout << "DRAW CIRCLES" << endl;
         programMode = MODE_DRAW_CIRCLE;
         break;
       case 'a': // draw line segment
         if ( programMode == MODE_DRAW_LINE_SEG )
-          return;
+          break;
         clearSelection();
         cout << "DRAW CONNECTED LINE SEGMENTS" << endl;
         programMode = MODE_DRAW_LINE_SEG;
         break;
       case 'd': // draw points
         if ( programMode == MODE_DRAW_POINT )
-          return;
+          break;
         clearSelection();
         cout << "DRAW POINTS" << endl;
         programMode = MODE_DRAW_POINT;
         break;
+      case 'f': // free form draw mode
+        if ( programMode == MODE_FREEFORM )
+          break;
+        clearSelection();
+        cout << "FREEFORM DRAW" << endl;
+        programMode = MODE_FREEFORM;
+        break;
+
       case 's': // select mode
         if ( programMode == MODE_SELECT )
           return;
@@ -571,7 +613,7 @@ void keyboardPress(unsigned char key, int x, int y)
         break;
       
       case '1': // toggle filled
-        if ( selectedShape )
+        if ( selectedIndex >= 0 )
           break;
         params.filled = !params.filled;
         if ( params.filled )
@@ -580,14 +622,14 @@ void keyboardPress(unsigned char key, int x, int y)
           cout << "NOW DRAWING UNFILLED POLYGONS" << endl;
         break;
       case '2': // change color
-        if ( selectedShape )
+        if ( selectedIndex >= 0 )
           break;
         params.color = nextColor();
         cout << "CHANGING COLOR TO " << colorName(*ColorIt) << endl;
         break;
       case '3': // increase thickness
       {
-        if ( selectedShape )
+        if ( selectedIndex >= 0 )
           break;
         params.thickness += THICKNESS_STEP;
         if ( params.thickness > MAX_THICKNESS )
@@ -662,7 +704,10 @@ void keyboardPress(unsigned char key, int x, int y)
         glutPostRedisplay();
         break;
       case '2': // change color
-        shapes[selectedIndex]->setColor(nextColor());
+        if (shapes[selectedIndex]->getColor() == *ColorIt)
+          shapes[selectedIndex]->setColor(nextColor());
+        else
+          shapes[selectedIndex]->setColor(*ColorIt);
         cout << "CHANGING COLOR TO " << colorName(*ColorIt) << endl;
         selectedShape->setColor(colorInv(*ColorIt));
         params.color = *ColorIt;
@@ -670,9 +715,6 @@ void keyboardPress(unsigned char key, int x, int y)
         break;
       case '3': // increase thickness
       {
-        if ( shapes[selectedIndex]->getFilled() )
-          break;
-
         GLfloat thickness = shapes[selectedIndex]->getThickness();
         thickness += THICKNESS_STEP;
         if ( thickness > MAX_THICKNESS )
@@ -687,9 +729,6 @@ void keyboardPress(unsigned char key, int x, int y)
       }
       case '4': // decrease thickness
       {
-        if ( shapes[selectedIndex]->getFilled() )
-          break;
-
         GLfloat thickness = shapes[selectedIndex]->getThickness();
         thickness -= THICKNESS_STEP;
         if ( thickness < MIN_THICKNESS )
@@ -712,7 +751,9 @@ void keyboardPress(unsigned char key, int x, int y)
         shapes.erase(it);
         selectedIndex = -1;
         selectedShape = ShapePtr();
+        programMode = MODE_SELECT;
         cout << "CUT SHAPE" << endl;
+        cout << "SELECT MODE" << endl;
         glutPostRedisplay();
         break;
       }
@@ -724,31 +765,121 @@ void keyboardPress(unsigned char key, int x, int y)
   }
 }
 
+void clearScreen()
+{
+  // deletes all shapes from screen
+  shapes = vector<ShapePtr>();
+  programMode = MODE_SELECT;
+  selectedShape = ShapePtr();
+  selectedIndex = -1;
+  drawingShape = ShapePtr();
+  copyShape = ShapePtr();
+}
 
-//// glut special function keys
-// GLUT_KEY_F1   F1 function key
-// GLUT_KEY_F2   F2 function key
-// GLUT_KEY_F3   F3 function key
-// GLUT_KEY_F4   F4 function key
-// GLUT_KEY_F5   F5 function key
-// GLUT_KEY_F6   F6 function key
-// GLUT_KEY_F7   F7 function key
-// GLUT_KEY_F8   F8 function key
-// GLUT_KEY_F9   F9 function key
-// GLUT_KEY_F10    F10 function key
-// GLUT_KEY_F11    F11 function key
-// GLUT_KEY_F12    F12 function key
-// GLUT_KEY_LEFT   Left function key
-// GLUT_KEY_RIGHT    Right function key
-// GLUT_KEY_UP   Up function key
-// GLUT_KEY_DOWN   Down function key
-// GLUT_KEY_PAGE_UP  Page Up function key
-// GLUT_KEY_PAGE_DOWN  Page Down function key
-// GLUT_KEY_HOME   Home function key
-// GLUT_KEY_END    End function key
-// GLUT_KEY_INSERT   Insert function key
-void specialPress(int key, int x, int y)
-{}
+void load(ifstream& fin)
+{
+  clearScreen();
+
+  string shapeID;
+  fin >> shapeID;
+  while ( fin.good() )
+  {
+    ShapePtr p;
+    if      ( shapeID == "R" )
+      p = ShapePtr(new Rect());
+    else if ( shapeID == "C" )
+      p = ShapePtr(new Circle());
+    else if ( shapeID == "P" )
+      p = ShapePtr(new Poly());
+    else if ( shapeID == "T" )
+      p = ShapePtr(new Point());
+    else if ( shapeID == "L" )
+      p = ShapePtr(new LineSegs());
+    else
+      ASSERT(false,"Unrecognized ShapeID found during load");
+    p->Load(fin,program);
+    shapes.push_back(p);
+    fin >> shapeID;
+  }
+
+  fin.close();
+}
+
+void save(ofstream& fout)
+{
+  for ( size_t i = 0; i < shapes.size(); ++i )
+    shapes[i]->Save(fout);
+  fout.close();
+}
+
+void popupMenu(int value)
+{
+  switch (value)
+  {
+    case MENU_NEW:
+    {
+      clearScreen();
+      break;
+    }
+    case MENU_SAVE:
+    {
+      if ( filename != "" )
+      {
+        ofstream fout(filename.c_str());
+        save(fout);
+        break;
+      }
+    }
+    case MENU_SAVE_AS:
+    {  
+      ofstream fout;
+      do {
+        cout << "Please enter filename to save as :";
+        cin >> filename;
+        fout.clear();
+        fout.open(filename.c_str());
+        if ( !fout.good() || filename.size() == 0U )
+          cout << "Invalid Filename" << endl;
+      } while (!fout.good() || filename.size() == 0U);
+      save(fout);
+      break;
+    }
+    case MENU_OPEN:
+    {
+      ifstream fin;
+      do {
+        cout << "Please enter filename to open : ";
+        cin >> filename;
+        fin.clear();
+        fin.open(filename.c_str());
+        if ( !fin.good() || filename.size() == 0U )
+          cout << "Invalid Filename" << endl;
+      } while ( !fin.good() || filename.size() == 0U );
+      load(fin);
+      break;
+    }
+    case MENU_RELOAD:
+    {
+      if ( filename == "" )
+      {
+        cout << "Drawing has not been saved, therefore cannot reload" << endl;
+        break;
+      }
+      ifstream fin(filename.c_str());
+      if ( !fin.good() )
+      {
+        cout << "The file " << filename << " cannot be opened" << endl;
+        break;
+      }
+      load(fin);
+      break;
+    }
+    case MENU_EXIT:
+      exit(0);
+      break;
+  }
+  glutPostRedisplay();
+}
 
 int main(int argc, char *argv[])
 {
@@ -765,12 +896,20 @@ int main(int argc, char *argv[])
   glutDisplayFunc(display);
   glutReshapeFunc(resize);
   glutKeyboardFunc(keyboardPress);
-  glutSpecialFunc(specialPress);
 
-  //glutKeyboardUpFunc(keyboardUp);
   glutMouseFunc(mousePress);
   glutPassiveMotionFunc(mouseMotion); 
   glutMotionFunc(mouseMotion);
+  
+  // initialize the pop-up menu
+  glutCreateMenu(popupMenu);
+  glutAddMenuEntry("New",MENU_NEW);
+  glutAddMenuEntry("Save",MENU_SAVE);
+  glutAddMenuEntry("Save as...",MENU_SAVE_AS);
+  glutAddMenuEntry("Open",MENU_OPEN);
+  glutAddMenuEntry("Reload",MENU_RELOAD);
+  glutAddMenuEntry("Exit",MENU_EXIT);
+  glutAttachMenu(GLUT_RIGHT_BUTTON);
 
   glutMainLoop();
 
