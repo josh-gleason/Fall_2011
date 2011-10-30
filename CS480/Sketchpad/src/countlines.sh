@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# ugly bash script by Josh G
+
 c=0
 for f in `find *`; do
   if [ -f "$f" ]; then
