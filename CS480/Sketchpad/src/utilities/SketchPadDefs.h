@@ -25,6 +25,9 @@ const int MODE_SCALE_SHAPE     = 13;
 // minimum distance line needs to be from mouse to be "inside" (selected)
 const float POINT_NEAR_LINE_THRESH = 0.02;
 
+// min distance between adjacent vertices
+const float MIN_VERTEX_SPACING     = 0.01;
+
 const GLfloat MAX_THICKNESS        = 3.0;
 const GLfloat MIN_THICKNESS        = 1.0;
 const GLfloat THICKNESS_STEP       = 1.0;

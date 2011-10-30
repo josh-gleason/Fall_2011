@@ -84,8 +84,23 @@ void LineSegs::mouseDownChild(vec2 cameraCoordLoc, int mode)
 {
   switch (mode)
   {
+    case MODE_FREEFORM:
     case MODE_DRAW_LINE_SEG:
     case MODE_DRAW_POLY:
+      bool breaker = false;
+      if ( mode == MODE_FREEFORM )
+      {
+        // check to make sure this vertex isn't on top of the last one
+        vec2 distTester = vec2(m_vertices[m_vertex_count-1].x,
+                               m_vertices[m_vertex_count-1].y);
+        distTester = distTester - cameraCoordLoc;
+        if ( sqrt(distTester.x*distTester.x+distTester.y*distTester.y)
+             < MIN_VERTEX_SPACING )
+          breaker = true;
+      }
+      if ( breaker )
+        break;
+
       int new_vertex_count = m_vertex_count+1;
       vec4* new_vertices = new vec4[new_vertex_count];
       
