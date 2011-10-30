@@ -21,6 +21,7 @@ using namespace std;
 
 const char VSHADER_NAME[] = "../src/shaders/vshader.glsl";
 const char FSHADER_NAME[] = "../src/shaders/fshader.glsl";
+const string IMG_PATH     = "../images/"
 
 unsigned int WIN_HEIGHT = 500;
 unsigned int WIN_WIDTH = 500;
@@ -834,8 +835,9 @@ void popupMenu(int value)
     {  
       ofstream fout;
       do {
-        cout << "Please enter filename to save as :";
+        cout << "Please enter filename to save as : ";
         cin >> filename;
+        filename = IMG_PATH + filename;
         fout.clear();
         fout.open(filename.c_str());
         if ( !fout.good() || filename.size() == 0U )
@@ -850,6 +852,7 @@ void popupMenu(int value)
       do {
         cout << "Please enter filename to open : ";
         cin >> filename;
+        filename = IMG_PATH + filename;
         fin.clear();
         fin.open(filename.c_str());
         if ( !fin.good() || filename.size() == 0U )
