@@ -21,7 +21,7 @@ using namespace std;
 
 const char VSHADER_NAME[] = "../src/shaders/vshader.glsl";
 const char FSHADER_NAME[] = "../src/shaders/fshader.glsl";
-const string IMG_PATH     = "../images/"
+const string IMG_PATH     = "../images/";
 
 unsigned int WIN_HEIGHT = 500;
 unsigned int WIN_WIDTH = 500;
